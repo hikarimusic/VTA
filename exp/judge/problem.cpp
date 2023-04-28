@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -93,8 +94,11 @@ void problem() {
                     rs += (q)?(-1):1;
                 }
             }
-            if (q)
+            if (q) {
                 pos[q] = rs + 1;
+                std::reverse(aln_i[q].begin(), aln_i[q].end());
+                std::reverse(aln_c[q].begin(), aln_c[q].end());
+            }
         }
         if (std::rand()&1) {
             rf[0] = 0;
