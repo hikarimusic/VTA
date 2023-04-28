@@ -30,3 +30,12 @@
 *.exe
 *.out
 *.app
+
+# User Define
+*.txt
+*.fna
+*.bwt
+*.chr
+*.occ
+*.seq
+*.sfa
