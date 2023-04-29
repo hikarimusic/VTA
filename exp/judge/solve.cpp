@@ -367,10 +367,16 @@ std::string map(std::string seq1, std::string seq2, std::uint32_t len, std::uint
             now[fg] = cls.size()-1;
         }
         else {
-            l = std::min(std::min((std::int64_t) seds[i].qe-cls[now[fg]].seds.back().qe, seds[i].re-cls[now[fg]].seds.back().re), (std::int64_t) seds[i].qe-seds[i].qs);
-            if (l>0) {
-                cls[now[fg]].nc += l;
-                cls[now[fg]].seds.push_back({seds[i].qe-l, seds[i].qe, seds[i].re-l, seds[i].re, seds[i].fg});
+            if (seds[i].rs<cls[now[fg]].seds.back().re && (seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+                cls[now[fg]].seds.pop_back();
+            if (cls[now[fg]].seds.empty())
+                cls[now[fg]].seds.push_back({seds[i].qs, seds[i].qe, seds[i].rs, seds[i].re, seds[i].fg});
+            else {
+                l = std::min(std::min((std::int64_t) seds[i].qe-cls[now[fg]].seds.back().qe, seds[i].re-cls[now[fg]].seds.back().re), (std::int64_t) seds[i].qe-seds[i].qs);
+                if (l>0) {
+                    cls[now[fg]].nc += l;
+                    cls[now[fg]].seds.push_back({seds[i].qe-l, seds[i].qe, seds[i].re-l, seds[i].re, seds[i].fg});
+                }                
             }
         }
     }
@@ -550,11 +556,12 @@ void solve() {
     submit.open("submit.txt", std::ios::trunc);
     std::string seq1;
     std::string seq2;
-    int qi{};
-    while (input >> seq1) {
-        input >> seq2;
+    int qn{};
+    input >> qn;
+    for (int i=0; i<qn; ++i) {
+        input >> seq1 >> seq2;
         submit << map(seq1, seq2, len, seq, sfa, bwt, occ, chr_n, chr_c) << '\n';
-        std::cout << '\r' << "[Map] " << (qi++) << "                    " << std::flush;
+        std::cout << '\r' << "[Map] " << i << "/" << qn << "                    " << std::flush;
     }
     std::cout << '\r' << "[Map] " << "Complete" << "                    \n" << std::flush;
 }

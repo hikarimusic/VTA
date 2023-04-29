@@ -37,6 +37,7 @@ void problem() {
     std::ofstream output;
     input.open("input.txt", std::ios::trunc);
     output.open("output.txt", std::ios::trunc);
+    input << qn << '\n';
     int insl{}, head{}, tail{}, qs{}, rs{}, rf[2]{};
     for (int qi=0; qi<qn; ++qi) {
         insl = (std::rand() % 600) + 201;

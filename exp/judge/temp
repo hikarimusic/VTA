@@ -1,3 +1,100 @@
 GCCTTGACCCGTTTGGCATTGCCAATTTAATGGAGCTGTATCTGACAGCTCTAGTCCGAGTTA CTGGGACTTTGGTAGCCGGCGCATGTTAGGCTGTCA
 GCCTTGACCCGTTTGGCATTGCCAATTTAATGGAGCTGTATCTGACAGCTCTAGTCCGAGTTAACTGGGACTTTGGTAGCCGGCGCATGTTAGGCTGCCA
 ...............................................................I.................................S..
+
+GGCCGGTGGCATGCTCGTCTGATGCAAGCGATTTCAAGGGGTATTTGACTTGGCTTGCCGACTTGTCTTGCGTCAGCTAGAGGTGCCTTGAGACTGGCAG  TGATAGGGAACTGACAGCAACGCGAATTGGCCCCACTGATGCGCCCCTGCATTCCAGATATAGAGGCCCCCTGTAAACTGGTGGCTGTACTTCCTTAACC 
+
+ref: CTGCCAGTCTCAGAGGCACCTCTAGCTGACGCAAG             CCAAGTCGGCAAGCCAAGTCAAATACCCGCTTGAAATCGCTTGCATCAGACGAGCATGCCACCG CC
+qry: CTGCCAGTCTCA AGGCACCTCTAGCTGACGCAAGACAAGTCGGCAAGCCAAGTC             AAATACCC CTTGAAATCGCTTGCATCAGACGAGCATGCCACCGGCC
+
+
+
+
+
+
+
+
+
+
+
+
+Distance error: 508/1
+Distance error: 1455/1
+Distance error: 1509/0
+Distance error: 1919/1
+Distance error: 2043/1
+Distance error: 3346/1
+Distance error: 3785/1
+Distance error: 3948/1
+Distance error: 3949/1
+Distance error: 3978/0
+Distance error: 4126/1
+Distance error: 4523/0
+Distance error: 4556/0
+Distance error: 4556/1
+Distance error: 4631/0
+Distance error: 4672/0
+Distance error: 4902/1
+Distance error: 4947/1
+Distance error: 4981/1
+Distance error: 5670/0
+Distance error: 5690/1
+Distance error: 5910/1
+Distance error: 6259/0
+Distance error: 6779/1
+Distance error: 7792/0
+Distance error: 8686/0
+Distance error: 9105/1
+Distance error: 9207/1
+Distance error: 9528/0
+Distance error: 9637/0
+Distance error: 9721/1
+
+
+
+
+
+
+
+
+
+Distance error: 211/0
+Distance error: 508/1
+Distance error: 1455/1
+Distance error: 1509/0
+Distance error: 1919/1
+Distance error: 2043/1
+Distance error: 3346/1
+Distance error: 3785/1
+Distance error: 3948/1
+Distance error: 3949/1
+Distance error: 3978/0
+Distance error: 4126/1
+Distance error: 4212/1
+Distance error: 4523/0
+Distance error: 4631/0
+Distance error: 4655/0
+Distance error: 4672/0
+Distance error: 4902/1
+Distance error: 4947/1
+Distance error: 4981/1
+Distance error: 5670/0
+Distance error: 5690/1
+Distance error: 5897/0
+Distance error: 5910/1
+Distance error: 5967/0
+Distance error: 6259/0
+Distance error: 6564/0
+Distance error: 7383/1
+Distance error: 7625/1
+Distance error: 7792/0
+Distance error: 7930/1
+Distance error: 8686/0
+Distance error: 8786/1
+Distance error: 9105/1
+Distance error: 9207/1
+Distance error: 9327/1
+Distance error: 9528/0
+Distance error: 9632/0
+Distance error: 9637/0
+Distance error: 9721/1
