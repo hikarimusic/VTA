@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-
 std::string rcseq(std::string s) {
     std::string res;
     for (std::int32_t i=s.size()-1; i>=0; --i) {
@@ -48,6 +47,7 @@ void judge() {
     // std::cout << '\n';
     // return;
     int qn{};
+    int err{};
     std::string qry;
     std::string chr;
     std::int64_t pos{};
@@ -55,7 +55,7 @@ void judge() {
     std::string aln;
     std::vector<int> aln_i;
     std::vector<char> aln_c;
-    int val_m{}, val_d{}, tmp_d{};
+    int val_m{}, val_p{}, val_d{}, tmp_d{};
     int qs{}, rs{};
     input >> qn;
 
@@ -88,6 +88,7 @@ void judge() {
                     // std::cout << "aln: " << aln[i] << ' ' << aln_i.back() << '\n';
             }
             val_m = 0;
+            val_p = pos;
             val_d = 0;
             qs = 0;
             rs = pos;
@@ -144,9 +145,16 @@ void judge() {
             }
             if (val_m) {
                 std::cout << "Match error: " << qi << "/" << q << '\n';
+                err += 1;
                 continue;
             }
             output >> chr >> pos >> rf >> aln;
+            pos = pos + ((std::find(chr_n.begin(), chr_n.end(), chr)-chr_n.begin())*len/10) - 1;
+            if ((val_p-pos)>10 || (val_p-pos)<-10) {
+                std::cout << "Position error: " << qi << "/" << q << '\n';
+                err += 1;
+                continue;
+            }
             aln_i.clear();
             aln_c.clear();
             for (int i=0; i<aln.size(); ++i) {
@@ -164,9 +172,11 @@ void judge() {
             }
             if (val_d>tmp_d) {
                 std::cout << "Distance error: " << qi << "/" << q << '\n';
+                err += 1;
             }
         }
     }
+    std::cout << "Error rate: " << err << "/" << qn << '\n';
     sequence.close();
     input.close();
     output.close();

@@ -367,10 +367,37 @@ std::string map(std::string seq1, std::string seq2, std::uint32_t len, std::uint
             now[fg] = cls.size()-1;
         }
         else {
-            if (seds[i].rs<cls[now[fg]].seds.back().re && (seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
-                cls[now[fg]].seds.pop_back();
-            if (cls[now[fg]].seds.empty())
+            // if (seds[i].rs<cls[now[fg]].seds.back().re && (seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+            //     cls[now[fg]].seds.pop_back();
+            // else if (seds[i].qs<cls[now[fg]].seds.back().qe && (seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+            //     cls[now[fg]].seds.pop_back();
+            // if (cls[now[fg]].seds.empty()) {
+            //     cls[now[fg]].seds.push_back({seds[i].qs, seds[i].qe, seds[i].rs, seds[i].re, seds[i].fg});
+            //     cls[now[fg]].nc = seds[i].qe-seds[i].qs;
+            // }
+            // else {
+            //     l = std::min(std::min((std::int64_t) seds[i].qe-cls[now[fg]].seds.back().qe, seds[i].re-cls[now[fg]].seds.back().re), (std::int64_t) seds[i].qe-seds[i].qs);
+            //     if (l>0) {
+            //         cls[now[fg]].nc += l;
+            //         cls[now[fg]].seds.push_back({seds[i].qe-l, seds[i].qe, seds[i].re-l, seds[i].re, seds[i].fg});
+            //     }                
+            // }
+            if (seds[i].rs<cls[now[fg]].seds.back().re) {
+                if ((seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+                    cls[now[fg]].seds.pop_back();
+                else
+                    continue;
+            }
+            else if (seds[i].qs<cls[now[fg]].seds.back().qe) {
+                if ((seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+                    cls[now[fg]].seds.pop_back();
+                else
+                    continue;
+            }
+            if (cls[now[fg]].seds.empty()) {
                 cls[now[fg]].seds.push_back({seds[i].qs, seds[i].qe, seds[i].rs, seds[i].re, seds[i].fg});
+                cls[now[fg]].nc = seds[i].qe-seds[i].qs;
+            }
             else {
                 l = std::min(std::min((std::int64_t) seds[i].qe-cls[now[fg]].seds.back().qe, seds[i].re-cls[now[fg]].seds.back().re), (std::int64_t) seds[i].qe-seds[i].qs);
                 if (l>0) {
@@ -418,11 +445,17 @@ std::string map(std::string seq1, std::string seq2, std::uint32_t len, std::uint
     // }
     std::string chr[2]{};
     std::int64_t pos[2]{};
-    int rf[2]{(val[1]>val[0])?1:0, (val[2]>val[3])?2:3};
+    int rf[2]{};
     std::string aln[2];
     std::vector<int> aln_i[2];
     std::vector<char> aln_c[2];
     for (int q=0; q<2; ++q) {
+        if (val[q*2+1]>val[q*2])
+            rf[q] = q * 2 + 1;
+        else if (val[q*2+1]==val[q*2] && cls[chs[q*2+1]].nc>cls[chs[q*2]].nc)
+            rf[q] = q * 2 + 1;
+        else
+            rf[q] = q * 2;
         std::string qry = seqs[rf[q]];
         std::vector<seed> sed_m = cls[chs[rf[q]]].seds;
         std::string sa;
