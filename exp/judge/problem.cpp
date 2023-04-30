@@ -7,7 +7,7 @@
 #include <vector>
 
 void problem() {
-    std::cout << '\r' << "[Sequence] " << "Generating" << "                    ";
+    std::cout << '\r' << "[Sequence] " << "Generating" << "                    " << std::flush;
     const int len{10000000};
     const int qn{10000};
     const int ql{100};
@@ -27,8 +27,7 @@ void problem() {
         }
     }
     seq_f.close();
-    std::cout << '\r' << "[Sequence] " << "Complete" << "                    \n";
-    std::cout << '\r' << "[Query] " << "Generating" << "                    ";
+    std::cout << '\r' << "[Sequence] " << "Complete" << "                    \n" << std::flush;
     std::string qry[2];
     int pos[2]{};
     std::vector<int> aln_i[2];
@@ -119,11 +118,11 @@ void problem() {
             output << (q?'\n':' ');
         }
         if (qi%1024==0)
-            std::cout << '\r' << "[Query] " << qi << '/' << qn << "                    ";
+            std::cout << '\r' << "[Query] " << qi << '/' << qn << "                    " << std::flush;
     }
     input.close();
     output.close();
-    std::cout << '\r' << "[Query] " << "Complete" << "                    \n";
+    std::cout << '\r' << "[Query] " << "Complete" << "                    \n" << std::flush;
     delete[] seq;
 }
 

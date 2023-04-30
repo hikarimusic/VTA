@@ -42,10 +42,6 @@ void judge() {
             }
         }
     }
-    // for (int i=len-100; i<len; ++i)
-    //     std::cout << seq[i];
-    // std::cout << '\n';
-    // return;
     int qn{};
     int err{};
     std::string qry;
@@ -58,21 +54,10 @@ void judge() {
     int val_m{}, val_p{}, val_d{}, tmp_d{};
     int qs{}, rs{};
     input >> qn;
-
-    // for (int qi=0; qi<10; ++qi) {
-    //     for (int q=0; q<2; ++q) {
-    //         input >> qry;
-    //         submit >> chr >> pos >> rf >> aln;
-    //         std::cout << qi << ' ' << q << ' ' << chr << ' ' << pos << ' ' << rf << ' ' << aln << '\n';
-    //     }
-    // }
-    // return;
     for (int qi=0; qi<qn; ++qi) {
-    // for (int qi=0; qi<10; ++qi) {
         for (int q=0; q<2; ++q) {
             input >> qry;
             submit >> chr >> pos >> rf >> aln;
-            // std::cout << qi << ' ' << q << ' ' << chr << ' ' << pos << ' ' << rf << ' ' << aln << '\n';
             if (rf=="R")
                 qry = rcseq(qry);
             pos = pos + ((std::find(chr_n.begin(), chr_n.end(), chr)-chr_n.begin())*len/10) - 1;
@@ -85,24 +70,12 @@ void judge() {
                 }
                 else
                     aln_i.back() = aln_i.back() * 10 + (aln[i]-'0');
-                    // std::cout << "aln: " << aln[i] << ' ' << aln_i.back() << '\n';
             }
             val_m = 0;
             val_p = pos;
             val_d = 0;
             qs = 0;
             rs = pos;
-
-            // std::cout << "pos: " << pos  << '\n';
-            // std::cout << "seq: ";
-            // for (int i=0; i<100; ++i)
-            //     std::cout << seq[rs+i];
-            // std::cout << "\nqry: ";
-            // for (int i=0; i<100; ++i)
-            //     std::cout << qry[i];
-            // std::cout << '\n';
-            // return;
-
             for (int i=0; i<aln_i.size(); ++i) {
                 if (aln_c[i]=='M') {
                     for (int j=0; j<aln_i[i]; ++j) {

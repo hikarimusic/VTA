@@ -71,14 +71,14 @@ void read(char* seq_f, std::string& chr, std::uint32_t& len, std::uint32_t* seq)
             write_acgt(seq, nuc_e, read[i]);
             nuc_e += 1;
             if ((nuc_e % 1024)==0)
-                std::cout << '\r' << "[Read Sequence] " << nuc_e << "/" << seq_l << "                    ";
+                std::cout << '\r' << "[Read Sequence] " << nuc_e << "/" << seq_l << "                    " << std::flush;
         }
     }
     len = (((nuc_e>>6)+1)<<6);
     for (std::uint32_t i=nuc_e; i<len; ++i)
         write_acgt(seq, i, 'T');
     delete[] read;
-    std::cout << '\r' << "[Read Sequence] " << "Complete" << "                    \n";
+    std::cout << '\r' << "[Read Sequence] " << "Complete" << "                    \n" << std::flush;
 } 
 
 std::uint32_t nucs(std::uint32_t* seq, std::uint32_t len, std::uint32_t p, std::uint32_t r) {
@@ -163,7 +163,7 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
             while (com+1 == nxt[com])
                 com += 1;
             if (com % 1024 == 0)
-                std::cout <<'\r' << std::flush << "[Build Index] " << com+gpc << "/" << len << "                    "; 
+                std::cout <<'\r' << "[Build Index] " << com+gpc << "/" << len << "                    " << std::flush; 
         }
         for (std::uint32_t i=0; i<grp[g]; ++i) {
             std::uint32_t pre{};
@@ -190,11 +190,11 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
     }
     for (int i=1; i<4; ++i)
         occ[(len>>4)+i] = occ[(len>>4)+i-1] + occ[(((len>>6)-1)<<2)+i-1];
-    std::cout << '\r' << "[Build Index] " << "Complete" << "                    \n"; 
+    std::cout << '\r' << "[Build Index] " << "Complete" << "                    \n" << std::flush; 
 }
 
 void save(char* seq_f, std::string& chr, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ) {
-    std::cout <<'\r' << "[Save Index] " << "Saving" << "                    "; 
+    std::cout <<'\r' << "[Save Index] " << "Saving" << "                    " << std::flush; 
     std::ofstream outfile;
     outfile.open(std::string(seq_f)+".chr", std::ios::trunc);
     outfile << chr;
@@ -211,7 +211,7 @@ void save(char* seq_f, std::string& chr, std::uint32_t len, std::uint32_t* seq, 
     outfile.open(std::string(seq_f)+".occ", std::ios::trunc | std::ios::binary);
     outfile.write((char*) occ, (len>>2)+16);
     outfile.close();
-    std::cout << '\r' << "[Save Index] " << "Complete" << "                    \n"; 
+    std::cout << '\r' << "[Save Index] " << "Complete" << "                    \n" << std::flush; 
 }
 
 void index(char** argv) {
@@ -231,7 +231,7 @@ void index(char** argv) {
     delete[] bwt;
     delete[] occ;
     time(&finish);
-    std::cout << '\r' << "[Finish] Total time: " << difftime(finish, start) << " seconds" << "                    \n";
+    std::cout << '\r' << "[Finish] Total time: " << difftime(finish, start) << " seconds" << "                    \n" << std::flush;
 }
 
 int main(int argc, char** argv) {
