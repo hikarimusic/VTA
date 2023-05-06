@@ -32,10 +32,17 @@
 *.app
 
 # User Define
-*.txt
-*.fna
 *.bwt
 *.chr
+*.fa
+*.fastq
+*.fna
+*.fq
 *.occ
+*.sam
 *.seq
 *.sfa
+*.txt
+index
+align
+tools

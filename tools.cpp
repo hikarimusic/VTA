@@ -271,10 +271,10 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
     std::cout << "[Map] ";
     capitalize(seq1);
     capitalize(seq2);
-    int s_wid{10};
-    int gap_1{50};
-    int gap_2{1000};
-    int flk{2};
+    const int s_wid{10};
+    const int gap_1{50};
+    const int gap_2{1000};
+    const int flk{2};
     std::vector<std::string> seqs{seq1, rcseq(seq1), seq2, rcseq(seq2)};
     std::vector<seed> seds;
     std::deque<std::int64_t> sedt(s_wid);
@@ -371,6 +371,8 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
         }
     }
     for (int i=0; i<4; ++i) {
+        if (now[i]==-1)
+            continue;
         if (cls[now[i]].nc > val[i]) {
             chs[i] = now[i];
             val[i] = cls[now[i]].nc;
@@ -397,14 +399,20 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
     std::vector<int> aln_i[2];
     std::vector<char> aln_c[2];
     for (int q=0; q<2; ++q) {
-        if (val[q*2+1]>val[q*2])
-            rf[q] = q * 2 + 1;
+        if (chs[q*2+1]==-1 && chs[q*2]==-1) {
+            std::cout << '\n' << "    " << "Not aligned" << '\n';
+            continue;
+        }
+        if (chs[q*2+1]==-1 || chs[q*2]==-1)
+            rf[q] = (chs[q*2+1]==-1)?0:1;
+        else if (val[q*2+1]>val[q*2])
+            rf[q] = 1;
         else if (val[q*2+1]==val[q*2] && cls[chs[q*2+1]].nc>cls[chs[q*2]].nc)
-            rf[q] = q * 2 + 1;
+            rf[q] = 1;
         else
-            rf[q] = q * 2;
-        std::string qry = seqs[rf[q]];
-        std::vector<seed> sed_m = cls[chs[rf[q]]].seds;
+            rf[q] = 0;
+        std::string qry = seqs[q*2+rf[q]];
+        std::vector<seed> sed_m = cls[chs[q*2+rf[q]]].seds;
         std::string sa;
         std::string sb;
         sa = qry.substr(0, sed_m.front().qs);
@@ -477,7 +485,6 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             }
         }
         locate(chr[q], pos[q], chr_n, chr_c);
-        rf[q] &= 1;
         for (int i=0; i<aln_i[q].size(); ++i)
             aln[q] += (std::string(1, aln_c[q][i]) + std::to_string(aln_i[q][i]));
         std::cout << '\n' << "    " << chr[q] << " " << pos[q] << " " << (rf[q]?"R":"F") << " " << aln[q] << '\n';

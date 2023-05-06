@@ -255,10 +255,10 @@ void dp_ed(std::string sa, std::string sb, std::vector<int>& aln_i, std::vector<
 std::string map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
     capitalize(seq1);
     capitalize(seq2);
-    int s_wid{10};
-    int gap_1{50};
-    int gap_2{1000};
-    int flk{2};
+    const int s_wid{10};
+    const int gap_1{50};
+    const int gap_2{1000};
+    const int flk{2};
     std::vector<std::string> seqs{seq1, rcseq(seq1), seq2, rcseq(seq2)};
     std::vector<seed> seds;
     std::deque<std::int64_t> sedt(s_wid);
