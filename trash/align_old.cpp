@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 void profile(char* seq_f, std::vector<std::string>& chr_n, std::vector<uint32_t>& chr_c, std::uint32_t& len) {
@@ -31,13 +30,13 @@ void load(char* seq_f, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
     infile.read((char*) seq, len>>2);
     infile.close();
     infile.open(std::string(seq_f)+".sfa", std::ios::binary);
-    infile.read((char*) sfa, len+4);
+    infile.read((char*) sfa, (len>>2)+4);
     infile.close();
     infile.open(std::string(seq_f)+".bwt", std::ios::binary);
     infile.read((char*) bwt, len>>2);
     infile.close();
     infile.open(std::string(seq_f)+".occ", std::ios::binary);
-    infile.read((char*) occ, len+16);
+    infile.read((char*) occ, (len>>2)+16);
     infile.close();
     std::cout <<'\r' << "[Load Index] " << "Complete" << "                    " << '\n' << std::flush;
 }
@@ -90,24 +89,24 @@ char itc(std::uint32_t i) {
 
 std::uint32_t lfm(std::uint32_t r, std::uint32_t c, std::uint32_t len, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ) {
     std::uint32_t ans{};
-    if ((r>>3)&1) {
-        ans = occ[(len>>2)+c] + occ[((r>>4)<<2)+c];
-        for (std::uint32_t i=r; i<(((r>>4)+1)<<4); ++i) {
+    if ((r>>5)&1) {
+        ans = occ[(len>>4)+c] + occ[((r>>6)<<2)+c];
+        for (std::uint32_t i=r; i<(((r>>6)+1)<<6); ++i) {
             if (nucs(bwt, len, i, 1)==c)
                 ans -= 1;
         }
     }
     else {
-        if (r<16)
-            ans = occ[(len>>2)+c];
+        if (r<64)
+            ans = occ[(len>>4)+c];
         else
-            ans = occ[(len>>2)+c] + occ[(((r>>4)-1)<<2)+c];
-        for (std::uint32_t i=((r>>4)<<4); i<r; ++i) {
+            ans = occ[(len>>4)+c] + occ[(((r>>6)-1)<<2)+c];
+        for (std::uint32_t i=((r>>6)<<6); i<r; ++i) {
             if (nucs(bwt, len, i, 1)==c)
                 ans += 1;
         }
     }
-    if (c==3 && r<=sfa[len/4])
+    if (c==3 && r<=sfa[len/16])
         ans += 1;
     return ans;
 }
@@ -117,11 +116,11 @@ std::uint32_t rpm(std::uint32_t r, std::uint32_t len, std::uint32_t* sfa, std::u
     std::uint32_t ans{};
     std::uint32_t off{};
     for (off=0; off<len; ++off) {
-        if (row%4==0) {
-            ans = sfa[row/4];
+        if (row%16==0) {
+            ans = sfa[row/16];
             break;
         }
-        else if (row==sfa[len/4]) {
+        else if (row==sfa[len/16]) {
             ans = 0;
             break;
         }
@@ -269,24 +268,32 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 }
 
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
-    const int proc{5};
-    const int s_wid{5};
+    const int s_wid{10};
     const int gap_1{50};
     const int gap_2{1000};
     const int flk{2};
     std::ifstream qry1_f;
     std::ifstream qry2_f;
     std::ofstream maps_f;
-    qry1_f.open(std::string(argv[2]));
-    qry2_f.open(std::string(argv[3]));
-    maps_f.open(std::string(argv[4]), std::ios::trunc);
+    std::string qry1_n(argv[2]);
+    std::string qry2_n(argv[3]);
+    std::string maps_n;
+    for (int i=0; i<qry1_n.size(); ++i) {
+        if (qry1_n[i]!=qry2_n[i])
+            break;
+        maps_n.push_back(qry1_n[i]);
+    }
+    maps_n += ((maps_n.back()=='.')?"sam":".sam");
+    qry1_f.open(qry1_n);
+    qry2_f.open(qry2_n);
+    maps_f.open(maps_n, std::ios::trunc);
     for (int i=0; i<chr_n.size(); ++i) {
         maps_f << "@SQ" << '\t';
         maps_f << "SN:" << chr_n[i] << '\t';
         maps_f << "LN:" << (i?(chr_c[i]-chr_c[i-1]):chr_c[0]) << '\n';
     }
     maps_f << "@PG" << '\t' << "ID:vta" << '\t' << "PN:vta" << '\t' << "VN:0.0.1" << '\t';
-    maps_f << "CL:" << "./align" << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << ' ' << argv[4] << '\n';
+    maps_f << "CL:" << "./align" << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << '\n';
     std::vector<std::string> qryn(2);
     std::vector<std::string> qrys(2);
     std::vector<std::string> qals(2);
@@ -303,46 +310,36 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         qryn[1] = qryn[1].substr(1, qryn[1].find(' ')-1);
         std::vector<std::string> seqs{qrys[0], rcseq(qrys[0]), qrys[1], rcseq(qrys[1])};
         std::vector<seed> seds;
-        std::unordered_set<std::int64_t> sedt[2];
+        std::deque<std::int64_t> sedt(s_wid);
         for (int fg=0; fg<4; ++fg) {
             std::string qry = seqs[fg];
-            int qe{}, qen{};
-            for (int qe=seqs[fg].size(); qe>0;) {
+            for (int qe=seqs[fg].size(); qe>0; --qe) {
                 std::int64_t head = 0;
                 std::int64_t tail = len;
-                if (proc)
-                    sedt[1].clear();
-                qen = 10000;
                 for (int qp=qe-1; qp>=0; --qp) {
                     head = lfm(head, cti(qry[qp]), len, sfa, bwt, occ);
                     tail = lfm(tail, cti(qry[qp]), len, sfa, bwt, occ);
                     if ((tail-head)<=s_wid) {
                         for (std::int64_t rps=head; rps<tail; ++rps) {
                             std::int64_t rp = rpm(rps, len, sfa, bwt, occ);
-                            if (!proc || sedt[0].find(rp+qry.size()-qp)==sedt[0].end()) {
+                            if (std::find(sedt.begin(), sedt.end(), rp+qry.size()-qp)==sedt.end()) {
                                 int qs{}; 
                                 for (qs=qp-1; qs>=0; --qs) {
                                     if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
                                         break;
                                 }
-                                qen = std::min(qen, qs);
                                 qs += 1;
                                 seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
                             }
-                            if (proc)
-                                sedt[1].insert(rp+qry.size()-qp);
+                            sedt.push_back(rp+qry.size()-qp);
                         }
-                        if (proc)
-                            sedt[0].swap(sedt[1]);
+                        for (int i=0; i<s_wid-(tail-head); ++i)
+                            sedt.push_back(0);
+                        for (int i=0; i<s_wid; ++i)
+                            sedt.pop_front();
                         break;
                     }
                 }
-                if (proc)
-                    qe -= proc;
-                else if (qen==10000)
-                    qe -= 1;
-                else
-                    qe = qen;
             }
         }
         std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
@@ -510,6 +507,7 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
             maps_f << chr[q] << '\t';
             maps_f << pos[q] << '\t';
             maps_f << 255 << '\t';
+            std::string cigar;
             std::vector<int> nla_i;
             std::vector<char> nla_c;
             for (int i=0; i<aln_i[q].size(); ++i) {
@@ -548,10 +546,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 if (rf[q])
                     tmpl *= -1;
             }
-            if (rf[q]) {
-                qrys[q] = rcseq(qrys[q]);
-                std::reverse(qals[q].begin(), qals[q].end());
-            }
             maps_f << tmpl << '\t';
             maps_f << qrys[q] << '\t';
             maps_f << qals[q] << '\t';
@@ -576,9 +570,9 @@ void align(char** argv) {
     std::uint32_t len{};
     profile(argv[1], chr_n, chr_c, len);
     std::uint32_t* seq{new std::uint32_t[len>>4]{}};
-    std::uint32_t* sfa{new std::uint32_t[(len>>2)+1]{}};
+    std::uint32_t* sfa{new std::uint32_t[(len>>4)+1]{}};
     std::uint32_t* bwt{new std::uint32_t[len>>4]{}};
-    std::uint32_t* occ{new std::uint32_t[(len>>2)+4]{}};
+    std::uint32_t* occ{new std::uint32_t[(len>>4)+4]{}};
     load(argv[1], len, seq, sfa, bwt, occ);
     maps(argv, len, seq, sfa, bwt, occ, chr_n, chr_c);
     delete[] seq;

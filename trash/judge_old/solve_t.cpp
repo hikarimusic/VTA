@@ -1,15 +1,14 @@
 #include <algorithm>
 #include <cstdint>
-#include <ctime>
 #include <deque>
 #include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
-void profile(char* seq_f, std::vector<std::string>& chr_n, std::vector<uint32_t>& chr_c, std::uint32_t& len) {
+void profile(std::vector<std::string>& chr_n, std::vector<uint32_t>& chr_c, std::uint32_t& len) {
     std::ifstream infile;
-    infile.open(std::string(seq_f)+".chr");
+    infile.open("sequence.fna.chr");
     std::string line;
     while (std::getline(infile, line)) {
         chr_n.push_back(line.substr(0, line.find(' ')));
@@ -23,22 +22,22 @@ void profile(char* seq_f, std::vector<std::string>& chr_n, std::vector<uint32_t>
     infile.close();
 }
 
-void load(char* seq_f, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ) {
-    std::cout <<'\r' << "[Load Index] " << "..." << "                    " << std::flush;
+void load(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ) {
+    std::cout <<'\r' << "[Load] " << "..." << "                    " << std::flush;
     std::ifstream infile;
-    infile.open(std::string(seq_f)+".seq", std::ios::binary);
+    infile.open("sequence.fna.seq", std::ios::binary);
     infile.read((char*) seq, len>>2);
     infile.close();
-    infile.open(std::string(seq_f)+".sfa", std::ios::binary);
-    infile.read((char*) sfa, len+4);
+    infile.open("sequence.fna.sfa", std::ios::binary);
+    infile.read((char*) sfa, (len>>2)+4);
     infile.close();
-    infile.open(std::string(seq_f)+".bwt", std::ios::binary);
+    infile.open("sequence.fna.bwt", std::ios::binary);
     infile.read((char*) bwt, len>>2);
     infile.close();
-    infile.open(std::string(seq_f)+".occ", std::ios::binary);
-    infile.read((char*) occ, len+16);
+    infile.open("sequence.fna.occ", std::ios::binary);
+    infile.read((char*) occ, (len>>2)+16);
     infile.close();
-    std::cout <<'\r' << "[Load Index] " << "Complete" << "                    " << '\n' << std::flush;
+    std::cout <<'\r' << "[Load] " << "Complete" << "                    \n" << std::flush;
 }
 
 std::uint32_t nucs(std::uint32_t* seq, std::uint32_t len, std::uint32_t p, std::uint32_t r) {
@@ -89,24 +88,24 @@ char itc(std::uint32_t i) {
 
 std::uint32_t lfm(std::uint32_t r, std::uint32_t c, std::uint32_t len, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ) {
     std::uint32_t ans{};
-    if ((r>>3)&1) {
-        ans = occ[(len>>2)+c] + occ[((r>>4)<<2)+c];
-        for (std::uint32_t i=r; i<(((r>>4)+1)<<4); ++i) {
+    if ((r>>5)&1) {
+        ans = occ[(len>>4)+c] + occ[((r>>6)<<2)+c];
+        for (std::uint32_t i=r; i<(((r>>6)+1)<<6); ++i) {
             if (nucs(bwt, len, i, 1)==c)
                 ans -= 1;
         }
     }
     else {
-        if (r<16)
-            ans = occ[(len>>2)+c];
+        if (r<64)
+            ans = occ[(len>>4)+c];
         else
-            ans = occ[(len>>2)+c] + occ[(((r>>4)-1)<<2)+c];
-        for (std::uint32_t i=((r>>4)<<4); i<r; ++i) {
+            ans = occ[(len>>4)+c] + occ[(((r>>6)-1)<<2)+c];
+        for (std::uint32_t i=((r>>6)<<6); i<r; ++i) {
             if (nucs(bwt, len, i, 1)==c)
                 ans += 1;
         }
     }
-    if (c==3 && r<=sfa[len/4])
+    if (c==3 && r<=sfa[len/16])
         ans += 1;
     return ans;
 }
@@ -116,11 +115,11 @@ std::uint32_t rpm(std::uint32_t r, std::uint32_t len, std::uint32_t* sfa, std::u
     std::uint32_t ans{};
     std::uint32_t off{};
     for (off=0; off<len; ++off) {
-        if (row%4==0) {
-            ans = sfa[row/4];
+        if (row%16==0) {
+            ans = sfa[row/16];
             break;
         }
-        else if (row==sfa[len/4]) {
+        else if (row==sfa[len/16]) {
             ans = 0;
             break;
         }
@@ -158,20 +157,6 @@ void capitalize(std::string& s) {
     }
 }
 
-void locate(std::string& chr, std::int64_t& pos, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
-    int l{}, m{}, r{};
-    r = (int) (chr_n.size()-1);
-    while (r>l) {
-        m = (l + r) / 2;
-        if (pos<chr_c[m])
-            r = m;
-        else
-            l = m + 1;
-    }
-    chr = chr_n[r];
-    pos = pos - (r?chr_c[r-1]:0) + 1;
-}
-
 struct seed {
     int qs{};
     int qe{};
@@ -186,7 +171,7 @@ struct cluster {
     std::vector<seed> seds;
 };
 
-void dp_ed(std::string sa, std::string sb, std::vector<int>& aln_i, std::vector<char>& aln_c, int& trc) {
+void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vector<char>& aln_c, int& trc) {
     int dp_i[sa.size()+1][sb.size()+1]{};
     char dp_c[sa.size()+1][sb.size()+1]{};
     std::vector<int> tmp_i;
@@ -267,11 +252,11 @@ void dp_ed(std::string sa, std::string sb, std::vector<int>& aln_i, std::vector<
     }
 }
 
-void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
-    std::cout << "[Map] ";
+std::string map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
+    clock_t tPre = clock();
     capitalize(seq1);
     capitalize(seq2);
-    const int s_wid{10};
+    const int s_wid{1};
     const int gap_1{50};
     const int gap_2{1000};
     const int flk{2};
@@ -309,6 +294,8 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             }
         }
     }
+    std::cout << "Seed Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    tPre = clock();
     std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
     std::vector<cluster> cls;
     int now[4]{-1, -1, -1, -1};
@@ -371,8 +358,6 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
         }
     }
     for (int i=0; i<4; ++i) {
-        if (now[i]==-1)
-            continue;
         if (cls[now[i]].nc > val[i]) {
             chs[i] = now[i];
             val[i] = cls[now[i]].nc;
@@ -392,6 +377,8 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             }
         }
     }
+    std::cout << "Cluster Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    tPre = clock();
     std::string chr[2]{};
     std::int64_t pos[2]{};
     int rf[2]{};
@@ -399,20 +386,14 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
     std::vector<int> aln_i[2];
     std::vector<char> aln_c[2];
     for (int q=0; q<2; ++q) {
-        if (chs[q*2+1]==-1 && chs[q*2]==-1) {
-            std::cout << '\n' << "    " << "Not aligned" << '\n';
-            continue;
-        }
-        if (chs[q*2+1]==-1 || chs[q*2]==-1)
-            rf[q] = (chs[q*2+1]==-1)?0:1;
-        else if (val[q*2+1]>val[q*2])
-            rf[q] = 1;
+        if (val[q*2+1]>val[q*2])
+            rf[q] = q * 2 + 1;
         else if (val[q*2+1]==val[q*2] && cls[chs[q*2+1]].nc>cls[chs[q*2]].nc)
-            rf[q] = 1;
+            rf[q] = q * 2 + 1;
         else
-            rf[q] = 0;
-        std::string qry = seqs[q*2+rf[q]];
-        std::vector<seed> sed_m = cls[chs[q*2+rf[q]]].seds;
+            rf[q] = q * 2;
+        std::string qry = seqs[rf[q]];
+        std::vector<seed> sed_m = cls[chs[rf[q]]].seds;
         std::string sa;
         std::string sb;
         sa = qry.substr(0, sed_m.front().qs);
@@ -451,144 +432,55 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             sb.push_back(itc(nucs(seq, len, sed_m.back().re+i, 1)));
         trc = 1;
         dp_ed(sa, sb, aln_i[q], aln_c[q], trc);
-
-        std::string aln_o[3];
-        std:int64_t rp{pos[q]}, qp{0};
-        for (int i=0; i<aln_i[q].size(); ++i) {
-            for (int j=0; j<aln_i[q][i]; ++j) {
-                if (aln_c[q][i]=='M') {
-                    aln_o[0].push_back(itc(nucs(seq, len, rp, 1)));
-                    aln_o[1].push_back(qry[qp]);
-                    aln_o[2].push_back('.');
-                    rp += 1;
-                    qp += 1;
-                }
-                else if (aln_c[q][i]=='S') {
-                    aln_o[0].push_back(itc(nucs(seq, len, rp, 1)));
-                    aln_o[1].push_back(qry[qp]);
-                    aln_o[2].push_back('S');
-                    rp += 1;
-                    qp += 1;
-                }
-                else if (aln_c[q][i]=='D') {
-                    aln_o[0].push_back(itc(nucs(seq, len, rp, 1)));
-                    aln_o[1].push_back(' ');
-                    aln_o[2].push_back('D');
-                    rp += 1;
-                }
-                else {
-                    aln_o[0].push_back(' ');
-                    aln_o[1].push_back(qry[qp]);
-                    aln_o[2].push_back('I');
-                    qp += 1;
-                }
-            }
+        int l{}, m{}, r{};
+        r = (int) (chr_n.size()-1);
+        while (r>l) {
+            m = (l + r) / 2;
+            if (pos[q]<chr_c[m])
+                r = m;
+            else
+                l = m + 1;
         }
-        locate(chr[q], pos[q], chr_n, chr_c);
+        chr[q] = chr_n[r];
+        pos[q] = pos[q] - (r?chr_c[r-1]:0) + 1;
+        rf[q] &= 1;
         for (int i=0; i<aln_i[q].size(); ++i)
             aln[q] += (std::string(1, aln_c[q][i]) + std::to_string(aln_i[q][i]));
-        std::cout << '\n' << "    " << chr[q] << " " << pos[q] << " " << (rf[q]?"R":"F") << " " << aln[q] << '\n';
-        std::cout << "    " << aln_o[0] << '\n' << "    " << aln_o[1] << '\n' << "    " << aln_o[2] << '\n';
     }
+    std::cout << "Align Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    std::string aws;
+    for (int q=0; q<2; ++q)
+        aws += (chr[q] + " " + std::to_string(pos[q]) + " " + (rf[q]?"R":"F") + " " + aln[q] + " "); 
+    return aws;
 }
 
-void search(std::string qry, std::uint32_t len, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
-    std::cout << "[Search] ";
-    capitalize(qry);
-    std::uint32_t head{0};
-    std::uint32_t tail{len};
-    for (std::int32_t i=qry.size()-1; i>=0; --i) {
-        head = lfm(head, cti(qry[i]), len, sfa, bwt, occ);
-        tail = lfm(tail, cti(qry[i]), len, sfa, bwt, occ);
-        if (head==tail)
-            break;
-    }
-    std::string chr;
-    std::int64_t pos{};
-    for (std::uint32_t i=head; i<tail; ++i) {
-        pos = rpm(i, len, sfa, bwt, occ);
-        locate(chr, pos, chr_n, chr_c);
-        std::cout <<  chr << ' ' << pos << " / ";
-    }
-    std::cout << '\n';
-}
-
-void print(std::string chr, std::uint32_t pos, std::uint32_t _len, std::uint32_t len, std::uint32_t* seq, std::vector<std::string> chr_n, std::vector<uint32_t> chr_c) {
-    std::cout << "[Print] ";
-    int r = std::find(chr_n.begin(), chr_n.end(), chr)-chr_n.begin();
-    if (r<chr_n.size())
-        pos = pos + (r?chr_c[r-1]:0) - 1;
-    else
-        pos -= 1;
-    for (std::uint32_t i=pos; i<pos+_len; ++i)
-        std::cout << itc(nucs(seq, len, i, 1));
-    std::cout << '\n';
-}
-
-void revcom(std::string str) {
-    capitalize(str);
-    std::cout << "[Revcom] ";
-    for (int i=str.size()-1; i>=0; --i) {
-        std::cout << itc(3-cti(str[i]));
-    }
-    std::cout << '\n';
-}
-
-void tools(char** argv) {
+void solve() {
     std::vector<std::string> chr_n;
     std::vector<std::uint32_t> chr_c;
     std::uint32_t len{};
-    profile(argv[1], chr_n, chr_c, len);
+    profile(chr_n, chr_c, len);
     std::uint32_t* seq{new std::uint32_t[len>>4]{}};
-    std::uint32_t* sfa{new std::uint32_t[(len>>2)+1]{}};
+    std::uint32_t* sfa{new std::uint32_t[(len>>4)+1]{}};
     std::uint32_t* bwt{new std::uint32_t[len>>4]{}};
-    std::uint32_t* occ{new std::uint32_t[(len>>2)+4]{}};
-    load(argv[1], len, seq, sfa, bwt, occ);
-    std::string cmd;
-    std::cout << "[Start] " << "Available commands:" << '\n';
-    std::cout << "    map [seq1] [seq2] " << '\n';
-    std::cout << "    search [str] " << '\n';
-    std::cout << "    print [chr] [pos] [len] " << '\n';
-    std::cout << "    revcom [str] " << '\n';
-    std::cout << "    end          " << '\n';
-    std::cout << "[Command] ";
-    while (std::cin>>cmd) {
-        if (cmd=="map" || cmd=="m") {
-            std::string seq1;
-            std::string seq2;
-            std::cin >> seq1 >> seq2;
-            map(seq1, seq2, len, seq, sfa, bwt, occ, chr_n, chr_c);
-        }
-        else if (cmd=="search" || cmd=="s") {
-            std::string str;
-            std::cin >> str;
-            search(str, len, sfa, bwt, occ, chr_n, chr_c);
-        }
-        else if (cmd=="print" || cmd=="p") {
-            std::string chr;
-            std::uint32_t pos;
-            std::uint32_t _len;
-            std::cin >> chr >> pos >> _len;
-            print(chr, pos, _len, len, seq, chr_n, chr_c);
-        }
-        else if (cmd=="revcom" || cmd=="r") {
-            std::string str;
-            std::cin >> str;
-            revcom(str);
-        }
-        else if (cmd=="end" || cmd=="e")
-            break;
-        else
-            std::cout << "Command not found!\n";
-        std::cout << "[Command] ";
+    std::uint32_t* occ{new std::uint32_t[(len>>4)+4]{}};
+    load(len, seq, sfa, bwt, occ);
+    std::ifstream input;
+    std::ofstream submit;
+    input.open("input.txt");
+    submit.open("submit.txt", std::ios::trunc);
+    std::string seq1;
+    std::string seq2;
+    int qn{};
+    input >> qn;
+    for (int i=0; i<1; ++i) {
+        input >> seq1 >> seq2;
+        submit << map(seq1, seq2, len, seq, sfa, bwt, occ, chr_n, chr_c) << '\n';
+        std::cout << '\r' << "[Map] " << i << "/" << qn << "                    " << std::flush;
     }
-    delete[] seq;
-    delete[] sfa;
-    delete[] bwt;
-    delete[] occ;
+    std::cout << '\r' << "[Map] " << "Complete" << "                    \n" << std::flush;
 }
 
-int main(int argc, char** argv) {
-    tools(argv);
+int main() {
+    solve();
     return 0;
 }

@@ -162,7 +162,8 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
             }
             while (com+1 == nxt[com])
                 com += 1;
-            std::cout <<'\r' << "[Build Index] " << com+gpc << "/" << len << "                    " << std::flush; 
+            if (com % 1024 == 0)
+                std::cout <<'\r' << "[Build Index] " << com+gpc << "/" << len << "                    " << std::flush; 
         }
         for (std::uint32_t i=0; i<grp[g]; ++i) {
             std::uint32_t pre{};

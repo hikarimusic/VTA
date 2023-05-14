@@ -162,23 +162,24 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
             }
             while (com+1 == nxt[com])
                 com += 1;
-            std::cout <<'\r' << "[Build Index] " << com+gpc << "/" << len << "                    " << std::flush; 
+            if (com % 1024 == 0)
+                std::cout <<'\r' << "[Build Index] " << com+gpc << "/" << len << "                    " << std::flush; 
         }
         for (std::uint32_t i=0; i<grp[g]; ++i) {
             std::uint32_t pre{};
             if (pmt[i]==0) {
                 pre = nucs(seq, len, len-1, 1);
-                sfa[len/4] = gpc+i;
+                sfa[len/16] = gpc+i;
             }
             else
                 pre = nucs(seq, len, pmt[i]-1, 1);
             write_acgt(bwt, gpc+i, (char) pre);
             cco[pre] += 1;
-            if ((gpc+i)%4==0)
-                sfa[(gpc+i)/4] = pmt[i];
-            if ((gpc+i+1)%16==0) {
+            if ((gpc+i)%16==0)
+                sfa[(gpc+i)/16] = pmt[i];
+            if ((gpc+i+1)%64==0) {
                 for (std::uint32_t j=0; j<4; ++j)
-                    occ[((gpc+i)/16)*4+j] = cco[j];
+                    occ[((gpc+i)/64)*4+j] = cco[j];
             }
         }
         delete[] pmt;
@@ -188,7 +189,7 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
         gpc += com;
     }
     for (int i=1; i<4; ++i)
-        occ[(len>>2)+i] = occ[(len>>2)+i-1] + occ[(((len>>4)-1)<<2)+i-1];
+        occ[(len>>4)+i] = occ[(len>>4)+i-1] + occ[(((len>>6)-1)<<2)+i-1];
     std::cout << '\r' << "[Build Index] " << "Complete" << "                    \n" << std::flush; 
 }
 
@@ -202,13 +203,13 @@ void save(char* seq_f, std::string& chr, std::uint32_t len, std::uint32_t* seq, 
     outfile.write((char*) seq, len>>2);
     outfile.close();
     outfile.open(std::string(seq_f)+".sfa", std::ios::trunc | std::ios::binary);
-    outfile.write((char*) sfa, len+4);
+    outfile.write((char*) sfa, (len>>2)+4);
     outfile.close();
     outfile.open(std::string(seq_f)+".bwt", std::ios::trunc | std::ios::binary);
     outfile.write((char*) bwt, len>>2);
     outfile.close();
     outfile.open(std::string(seq_f)+".occ", std::ios::trunc | std::ios::binary);
-    outfile.write((char*) occ, len+16);
+    outfile.write((char*) occ, (len>>2)+16);
     outfile.close();
     std::cout << '\r' << "[Save Index] " << "Complete" << "                    \n" << std::flush; 
 }
@@ -220,8 +221,8 @@ void index(char** argv) {
     std::uint32_t len{};
     std::uint32_t* seq{new std::uint32_t[268435456]{}};
     read(argv[1], chr, len, seq);
-    std::uint32_t* sfa{new std::uint32_t[1073741824]{}};
-    std::uint32_t* bwt{new std::uint32_t[1073741824]{}};
+    std::uint32_t* sfa{new std::uint32_t[268435456]{}};
+    std::uint32_t* bwt{new std::uint32_t[268435456]{}};
     std::uint32_t* occ{new std::uint32_t[268435456]{}};
     build(len, seq, sfa, bwt, occ);
     save(argv[1], chr, len, seq, sfa, bwt, occ);

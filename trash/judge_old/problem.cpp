@@ -6,30 +6,13 @@
 #include <string>
 #include <vector>
 
-std::string rcseq(std::string s) {
-    std::string res;
-    for (std::int32_t i=s.size()-1; i>=0; --i) {
-        if (s[i]=='A')
-            res += 'T';
-        else if (s[i]=='C')
-            res += 'G';
-        else if (s[i]=='G')
-            res += 'C';
-        else if (s[i]=='T')
-            res += 'A';
-    }
-    return res;
-}
-
 void problem() {
     std::cout << '\r' << "[Sequence] " << "Generating" << "                    " << std::flush;
-    const int len{100000000};
+    const int len{10000000};
     const int qn{1000000};
     const int ql{100};
-    const int var_s{10};
-    const int var_d{5};
-    const int var_i{5};
     char* seq{new char[len]{}};
+    int rand{};
     char itc[8]{'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T'};
     std::map<char, int> cti = {{'A', 0}, {'C', 1}, {'G', 2}, {'T', 3}};
     for (int i=0; i<len; ++i)
@@ -37,7 +20,7 @@ void problem() {
     std::ofstream seq_f;
     seq_f.open("sequence.fna", std::ios::trunc);
     for (int i=0; i<10; ++i) {
-        seq_f << ">NC_" <<  std::string(6-std::to_string(i+1).size(), '0')+std::to_string(i+1) << '\n';
+        seq_f << ">NC_" << i+1 << '\n';
         for (int j=0; j<len/1000; ++j) {
             seq_f.write((char*)seq+(len/10)*i+100*j, 100);
             seq_f << '\n';
@@ -45,23 +28,16 @@ void problem() {
     }
     seq_f.close();
     std::cout << '\r' << "[Sequence] " << "Complete" << "                    \n" << std::flush;
-    std::ofstream input[2];
-    std::ofstream output;
-    input[0].open("input1.fq", std::ios::trunc);
-    input[1].open("input2.fq", std::ios::trunc);
-    output.open("output.sam", std::ios::trunc);
-    for (int i=0; i<10; ++i) {
-        output << "@SQ" << '\t';
-        output << "SN:" << "NC_" << std::string(6-std::to_string(i+1).size(), '0')+std::to_string(i+1) << '\t';
-        output << "LN:" << len/10 << '\n';
-    }
-    output << "@PG" << '\t' << "ID:NA" << '\t' << "PN:NA" << '\t' << "VN:NA" << '\t';
-    output << "CL:" << "./problem" << '\n';
     std::string qry[2];
     int pos[2]{};
     std::vector<int> aln_i[2];
     std::vector<char> aln_c[2];
-    int insl{}, head{}, tail{}, qs{}, rs{}, rf[2]{}, rand{};
+    std::ofstream input;
+    std::ofstream output;
+    input.open("input.txt", std::ios::trunc);
+    output.open("output.txt", std::ios::trunc);
+    input << qn << '\n';
+    int insl{}, head{}, tail{}, qs{}, rs{}, rf[2]{};
     for (int qi=0; qi<qn; ++qi) {
         insl = (std::rand() % 600) + 201;
         head = std::rand() % (len-insl+1);
@@ -76,7 +52,7 @@ void problem() {
             rs = pos[q];
             while (qs<ql) {
                 rand = std::rand() % 1000;
-                if (rand<var_s) {
+                if (rand<10) {
                     qry[q].push_back(itc[(q?(3-cti[seq[rs]]):cti[seq[rs]])+std::rand()%3+1]);
                     if (aln_c[q].empty() || aln_c[q].back()!='S') {
                         aln_i[q].push_back(1);
@@ -87,7 +63,7 @@ void problem() {
                     qs += 1;
                     rs += (q)?(-1):1;
                 }
-                else if (rand<var_s+var_d) {
+                else if (rand<15) {
                     if (aln_c[q].empty() || aln_c[q].back()!='D') {
                         aln_i[q].push_back(1);
                         aln_c[q].push_back('D');
@@ -96,7 +72,7 @@ void problem() {
                         aln_i[q].back() += 1;
                     rs += (q)?(-1):1;
                 }
-                else if (rand<var_s+var_d+var_i) {
+                else if (rand<20) {
                     qry[q].push_back(itc[std::rand()%4]);
                     if (aln_c[q].empty() || aln_c[q].back()!='I') {
                         aln_i[q].push_back(1);
@@ -133,59 +109,18 @@ void problem() {
             rf[1] = 0;
         }
         for (int q=0; q<2; ++q) {
-            input[q] << "@SIM" << std::string(7-std::to_string(qi+1).size(), '0')+std::to_string(qi+1) << ' ' << q+1 << '\n';
-            input[q] << qry[rf[q]] << '\n' << '+' << '\n' << std::string(ql, 'E') << '\n';
-            output << "SIM" << std::string(7-std::to_string(qi+1).size(), '0')+std::to_string(qi+1) << '\t';
-            if (rf[0])
-                output << (q?163:83) << '\t';
-            else
-                output << (q?147:99) << '\t';
-            output << "NC_" << std::string(6-std::to_string(pos[rf[q]]/(len/10)+1).size(), '0')+std::to_string(pos[rf[q]]/(len/10)+1) << '\t';
-            output << pos[rf[q]]%(len/10)+1 << '\t';
-            output << 255 << '\t';
-            std::vector<int> nla_i;
-            std::vector<char> nla_c;
-            for (int i=0; i<aln_i[rf[q]].size(); ++i) {
-                if (aln_c[rf[q]][i]=='M' || aln_c[rf[q]][i]=='S') {
-                    if (i==0 || (aln_c[rf[q]][i-1]!='M' && aln_c[rf[q]][i-1]!='S')) {
-                        nla_i.push_back(aln_i[rf[q]][i]);
-                        nla_c.push_back('M');
-                    }
-                    else {
-                        nla_i.back() += aln_i[rf[q]][i];
-                    }
-                }
-                else {
-                    nla_i.push_back(aln_i[rf[q]][i]);
-                    nla_c.push_back(aln_c[rf[q]][i]);
-                }
-            }
-            for (int i=0; i<nla_i.size(); ++i)
-                output << nla_i[i] << nla_c[i];
-            output << '\t';
-            output << "=" << '\t';
-            output << pos[rf[1-q]]%(len/10)+1 << '\t';
-            int64_t tmpl{};
-            tmpl = pos[1] - pos[0];
-            for (int i=0; i<aln_i[1].size(); ++i) {
-                if (aln_c[1][i]!='I')
-                    tmpl += aln_i[1][i];
-            }
-            if (rf[q])
-                tmpl *= -1;
-            output << tmpl << '\t';
-            output << (rf[q]?rcseq(qry[rf[q]]):qry[rf[q]]) << '\t';
-            output << std::string(ql, 'E') << '\t';
-            output << "aln:";
+            input << qry[rf[q]] << ' ';
+            input << (q?'\n':' ');
+            output << "NC_" << pos[rf[q]]/(len/10)+1 << ' ' << pos[rf[q]]%(len/10)+1 << ' ';
+            output << (rf[q]?'R':'F') << ' ';
             for (int i=0; i<aln_i[rf[q]].size(); ++i)
                 output << aln_c[rf[q]][i] << aln_i[rf[q]][i];
-            output << '\n';
+            output << (q?'\n':' ');
         }
         if (qi%1024==0)
             std::cout << '\r' << "[Query] " << qi << '/' << qn << "                    " << std::flush;
     }
-    input[0].close();
-    input[1].close();
+    input.close();
     output.close();
     std::cout << '\r' << "[Query] " << "Complete" << "                    \n" << std::flush;
     delete[] seq;

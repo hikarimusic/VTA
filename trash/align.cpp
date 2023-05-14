@@ -5,7 +5,6 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <unordered_set>
 #include <vector>
 
 void profile(char* seq_f, std::vector<std::string>& chr_n, std::vector<uint32_t>& chr_c, std::uint32_t& len) {
@@ -269,24 +268,32 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 }
 
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
-    const int proc{5};
-    const int s_wid{5};
+    const int s_wid{10};
     const int gap_1{50};
     const int gap_2{1000};
     const int flk{2};
     std::ifstream qry1_f;
     std::ifstream qry2_f;
     std::ofstream maps_f;
-    qry1_f.open(std::string(argv[2]));
-    qry2_f.open(std::string(argv[3]));
-    maps_f.open(std::string(argv[4]), std::ios::trunc);
+    std::string qry1_n(argv[2]);
+    std::string qry2_n(argv[3]);
+    std::string maps_n;
+    for (int i=0; i<qry1_n.size(); ++i) {
+        if (qry1_n[i]!=qry2_n[i])
+            break;
+        maps_n.push_back(qry1_n[i]);
+    }
+    maps_n += ((maps_n.back()=='.')?"sam":".sam");
+    qry1_f.open(qry1_n);
+    qry2_f.open(qry2_n);
+    maps_f.open(maps_n, std::ios::trunc);
     for (int i=0; i<chr_n.size(); ++i) {
         maps_f << "@SQ" << '\t';
         maps_f << "SN:" << chr_n[i] << '\t';
         maps_f << "LN:" << (i?(chr_c[i]-chr_c[i-1]):chr_c[0]) << '\n';
     }
     maps_f << "@PG" << '\t' << "ID:vta" << '\t' << "PN:vta" << '\t' << "VN:0.0.1" << '\t';
-    maps_f << "CL:" << "./align" << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << ' ' << argv[4] << '\n';
+    maps_f << "CL:" << "./align" << ' ' << argv[1] << ' ' << argv[2] << ' ' << argv[3] << '\n';
     std::vector<std::string> qryn(2);
     std::vector<std::string> qrys(2);
     std::vector<std::string> qals(2);
@@ -303,46 +310,36 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         qryn[1] = qryn[1].substr(1, qryn[1].find(' ')-1);
         std::vector<std::string> seqs{qrys[0], rcseq(qrys[0]), qrys[1], rcseq(qrys[1])};
         std::vector<seed> seds;
-        std::unordered_set<std::int64_t> sedt[2];
+        std::deque<std::int64_t> sedt(s_wid);
         for (int fg=0; fg<4; ++fg) {
             std::string qry = seqs[fg];
-            int qe{}, qen{};
-            for (int qe=seqs[fg].size(); qe>0;) {
+            for (int qe=seqs[fg].size(); qe>0; --qe) {
                 std::int64_t head = 0;
                 std::int64_t tail = len;
-                if (proc)
-                    sedt[1].clear();
-                qen = 10000;
                 for (int qp=qe-1; qp>=0; --qp) {
                     head = lfm(head, cti(qry[qp]), len, sfa, bwt, occ);
                     tail = lfm(tail, cti(qry[qp]), len, sfa, bwt, occ);
                     if ((tail-head)<=s_wid) {
                         for (std::int64_t rps=head; rps<tail; ++rps) {
                             std::int64_t rp = rpm(rps, len, sfa, bwt, occ);
-                            if (!proc || sedt[0].find(rp+qry.size()-qp)==sedt[0].end()) {
+                            if (std::find(sedt.begin(), sedt.end(), rp+qry.size()-qp)==sedt.end()) {
                                 int qs{}; 
                                 for (qs=qp-1; qs>=0; --qs) {
                                     if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
                                         break;
                                 }
-                                qen = std::min(qen, qs);
                                 qs += 1;
                                 seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
                             }
-                            if (proc)
-                                sedt[1].insert(rp+qry.size()-qp);
+                            sedt.push_back(rp+qry.size()-qp);
                         }
-                        if (proc)
-                            sedt[0].swap(sedt[1]);
+                        for (int i=0; i<s_wid-(tail-head); ++i)
+                            sedt.push_back(0);
+                        for (int i=0; i<s_wid; ++i)
+                            sedt.pop_front();
                         break;
                     }
                 }
-                if (proc)
-                    qe -= proc;
-                else if (qen==10000)
-                    qe -= 1;
-                else
-                    qe = qen;
             }
         }
         std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
@@ -548,10 +545,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 if (rf[q])
                     tmpl *= -1;
             }
-            if (rf[q]) {
-                qrys[q] = rcseq(qrys[q]);
-                std::reverse(qals[q].begin(), qals[q].end());
-            }
             maps_f << tmpl << '\t';
             maps_f << qrys[q] << '\t';
             maps_f << qals[q] << '\t';
@@ -560,7 +553,7 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 maps_f << aln_c[q][i] << aln_i[q][i];
             maps_f << '\n';
         }
-        std::cout <<'\r' << "[Align Read] " << ++qry_c << "                    " << std::flush;
+        std::cout << '\r' << "[Align Read] " << ++qry_c << "                    " << std::flush;
     }
     qry1_f.close();
     qry2_f.close();

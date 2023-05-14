@@ -171,7 +171,7 @@ struct cluster {
     std::vector<seed> seds;
 };
 
-void dp_ed(std::string sa, std::string sb, std::vector<int>& aln_i, std::vector<char>& aln_c, int& trc) {
+void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vector<char>& aln_c, int& trc) {
     int dp_i[sa.size()+1][sb.size()+1]{};
     char dp_c[sa.size()+1][sb.size()+1]{};
     std::vector<int> tmp_i;
