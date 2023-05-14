@@ -46,5 +46,5 @@
 index
 align
 tools
-/exp/judge/problem
-/exp/judge/judge
+exp/judge/problem
+exp/judge/judge
