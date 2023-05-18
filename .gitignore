@@ -46,5 +46,8 @@
 index
 align
 tools
-exp/judge/problem
-exp/judge/judge
+exp/validate/problem
+exp/validate/judge
+exp/simulate/GRCh_clean
+exp/simulate/problem
+exp/simulate/judge

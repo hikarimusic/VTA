@@ -269,8 +269,8 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 }
 
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
-    const int proc{5};
-    const int s_wid{5};
+    const int proc{1};
+    const int s_wid{50};
     const int gap_1{50};
     const int gap_2{1000};
     const int flk{2};
@@ -292,8 +292,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
     std::vector<std::string> qals(2);
     std::int64_t qry_c{};
     while (std::getline(qry1_f, qryn[0])) {
-        // clock_t tPre = clock();
-        
         std::getline(qry1_f, qrys[0]);
         std::getline(qry1_f, qals[0]);
         std::getline(qry1_f, qals[0]);
@@ -305,29 +303,20 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         qryn[1] = qryn[1].substr(1, qryn[1].find(' ')-1);
         std::vector<std::string> seqs{qrys[0], rcseq(qrys[0]), qrys[1], rcseq(qrys[1])};
         std::vector<seed> seds;
-        // std::deque<std::int64_t> sedt(s_wid);
         std::unordered_set<std::int64_t> sedt[2];
-        // std::cout << "PreProcess: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         for (int fg=0; fg<4; ++fg) {
             std::string qry = seqs[fg];
             int qe{}, qen{};
             for (int qe=seqs[fg].size(); qe>0;) {
-            // for (int qe=seqs[fg].size(); qe>0; qe-=20) {
                 std::int64_t head = 0;
                 std::int64_t tail = len;
                 if (proc)
                     sedt[1].clear();
                 qen = 10000;
-                // tPre = clock();
                 for (int qp=qe-1; qp>=0; --qp) {
                     head = lfm(head, cti(qry[qp]), len, sfa, bwt, occ);
                     tail = lfm(tail, cti(qry[qp]), len, sfa, bwt, occ);
                     if ((tail-head)<=s_wid) {
-
-                        // std::cout << "LFM: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-                        // tPre = clock();
-
                         for (std::int64_t rps=head; rps<tail; ++rps) {
                             std::int64_t rp = rpm(rps, len, sfa, bwt, occ);
                             if (!proc || sedt[0].find(rp+qry.size()-qp)==sedt[0].end()) {
@@ -345,14 +334,9 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                         }
                         if (proc)
                             sedt[0].swap(sedt[1]);
-
-                        // std::cout << "Push: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-                        // tPre = clock();
-
                         break;
                     }
                 }
-                // std::cout << "qen: " << qen << '\n';
                 if (proc)
                     qe -= proc;
                 else if (qen==10000)
@@ -361,11 +345,7 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                     qe = qen;
             }
         }
-        // std::cout << "Seeding: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
-        // std::cout << "Sort: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         std::vector<cluster> cls;
         int now[4]{-1, -1, -1, -1};
         int chs[4]{-1, -1, -1, -1};
@@ -448,8 +428,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 }
             }
         }
-        // std::cout << "Clustering: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         std::string chr[2]{};
         std::int64_t pos[2]{};
         int rf[2]{};
@@ -511,8 +489,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
             dp_ed(sa, sb, aln_i[q], aln_c[q], trc);
             locate(chr[q], pos[q], chr_n, chr_c);
         }
-        // std::cout << "Fine align: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         for (int q=0; q<2; ++q) {
             maps_f << qryn[q] << '\t';
             int flag{1};
@@ -584,10 +560,7 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 maps_f << aln_c[q][i] << aln_i[q][i];
             maps_f << '\n';
         }
-        // std::cout << "Output: " << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
-        // tPre = clock();
         std::cout <<'\r' << "[Align Read] " << ++qry_c << "                    " << std::flush;
-        // return;
     }
     qry1_f.close();
     qry2_f.close();

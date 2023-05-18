@@ -8,7 +8,7 @@
 
 std::string rcseq(std::string s) {
     std::string res;
-    for (std::int32_t i=s.size()-1; i>=0; --i) {
+    for (std::int64_t i=s.size()-1; i>=0; --i) {
         if (s[i]=='A')
             res += 'T';
         else if (s[i]=='C')
@@ -21,25 +21,46 @@ std::string rcseq(std::string s) {
     return res;
 }
 
-void problem() {
+void locate(std::string& chr, std::int64_t& pos, std::vector<std::string> chr_n, std::vector<std::int64_t> chr_c) {
+    std::int64_t l{}, m{}, r{};
+    r = (std::int64_t) (chr_n.size()-1);
+    while (r>l) {
+        m = (l + r) / 2;
+        if (pos<chr_c[m])
+            r = m;
+        else
+            l = m + 1;
+    }
+    chr = chr_n[r];
+    pos = pos - (r?chr_c[r-1]:0) + 1;
+}
+
+void problem(char** argv) {
     std::cout << '\r' << "[Sequence] " << "Generating" << "                    " << std::flush;
-    const int len{100000000};
-    const int qn{1000000};
-    const int ql{100};
-    const int var_s{10};
-    const int var_d{5};
-    const int var_i{5};
+    const std::int64_t len{3000000000};
+    const std::int64_t nch{20};
+    const std::int64_t qn{1000000};
+    const std::int64_t ql{100};
+    const std::int64_t var_s{10};
+    const std::int64_t var_d{5};
+    const std::int64_t var_i{5};
     char* seq{new char[len]{}};
+    std::vector<std::string> chr_n(nch);
+    std::vector<std::int64_t> chr_c(nch);
     char itc[8]{'A', 'C', 'G', 'T', 'A', 'C', 'G', 'T'};
-    std::map<char, int> cti = {{'A', 0}, {'C', 1}, {'G', 2}, {'T', 3}};
-    for (int i=0; i<len; ++i)
+    std::map<char, std::int64_t> cti = {{'A', 0}, {'C', 1}, {'G', 2}, {'T', 3}};
+    for (std::int64_t i=0; i<len; ++i)
         seq[i] = itc[std::rand()%4];
+    for (int i=0; i<nch; ++i) {
+        chr_n[i] = "NC_" + std::string(6-std::to_string(i+1).size(), '0')+std::to_string(i+1);
+        chr_c[i] = len * (i+1) / nch;
+    }
     std::ofstream seq_f;
     seq_f.open("sequence.fna", std::ios::trunc);
-    for (int i=0; i<10; ++i) {
-        seq_f << ">NC_" <<  std::string(6-std::to_string(i+1).size(), '0')+std::to_string(i+1) << '\n';
-        for (int j=0; j<len/1000; ++j) {
-            seq_f.write((char*)seq+(len/10)*i+100*j, 100);
+    for (int i=0; i<nch; ++i) {
+        seq_f << '>' <<  chr_n[i] << '\n';
+        for (std::int64_t j=0; j<len/(nch*100); ++j) {
+            seq_f.write((char*)seq+(len/nch)*i+100*j, 100);
             seq_f << '\n';
         }
     }
@@ -50,22 +71,29 @@ void problem() {
     input[0].open("input1.fq", std::ios::trunc);
     input[1].open("input2.fq", std::ios::trunc);
     output.open("output.sam", std::ios::trunc);
-    for (int i=0; i<10; ++i) {
+    for (int i=0; i<chr_n.size(); ++i) {
         output << "@SQ" << '\t';
-        output << "SN:" << "NC_" << std::string(6-std::to_string(i+1).size(), '0')+std::to_string(i+1) << '\t';
-        output << "LN:" << len/10 << '\n';
+        output << "SN:" << chr_n[i] << '\t';
+        output << "LN:" << (i?(chr_c[i]-chr_c[i-1]):chr_c[i]) << '\n';
     }
     output << "@PG" << '\t' << "ID:NA" << '\t' << "PN:NA" << '\t' << "VN:NA" << '\t';
     output << "CL:" << "./problem" << '\n';
     std::string qry[2];
-    int pos[2]{};
+    std::string chr[2];
+    std::int64_t pos[2]{};
     std::vector<int> aln_i[2];
     std::vector<char> aln_c[2];
-    int insl{}, head{}, tail{}, qs{}, rs{}, rf[2]{}, rand{};
-    for (int qi=0; qi<qn; ++qi) {
-        insl = (std::rand() % 600) + 201;
-        head = std::rand() % (len-insl+1);
-        tail = head + insl - 1;
+    std::int64_t insl{}, head{}, tail{}, qs{}, rs{}, rf[2]{}, rand{};
+    for (std::int64_t qi=0; qi<qn; ++qi) {
+        do {
+            insl = (std::rand() % 600) + 201;
+            head = (((std::int64_t)std::rand())*((std::int64_t)RAND_MAX+1)+((std::int64_t)std::rand())) % (len-insl+1);
+            tail = head + insl - 1;
+            pos[0] = head;
+            pos[1] = tail;
+            locate(chr[0], pos[0], chr_n, chr_c);
+            locate(chr[1], pos[1], chr_n, chr_c);
+        } while (chr[0]!=chr[1]);
         pos[0] = head;
         pos[1] = tail;
         for (int q=0; q<2; ++q) {
@@ -123,6 +151,7 @@ void problem() {
                 std::reverse(aln_i[q].begin(), aln_i[q].end());
                 std::reverse(aln_c[q].begin(), aln_c[q].end());
             }
+            locate(chr[q], pos[q], chr_n, chr_c);
         }
         if (std::rand()&1) {
             rf[0] = 0;
@@ -140,8 +169,8 @@ void problem() {
                 output << (q?163:83) << '\t';
             else
                 output << (q?147:99) << '\t';
-            output << "NC_" << std::string(6-std::to_string(pos[rf[q]]/(len/10)+1).size(), '0')+std::to_string(pos[rf[q]]/(len/10)+1) << '\t';
-            output << pos[rf[q]]%(len/10)+1 << '\t';
+            output << chr[rf[q]] << '\t';
+            output << pos[rf[q]] << '\t';
             output << 255 << '\t';
             std::vector<int> nla_i;
             std::vector<char> nla_c;
@@ -165,7 +194,7 @@ void problem() {
             output << '\t';
             output << "=" << '\t';
             output << pos[rf[1-q]]%(len/10)+1 << '\t';
-            int64_t tmpl{};
+            std::int64_t tmpl{};
             tmpl = pos[1] - pos[0];
             for (int i=0; i<aln_i[1].size(); ++i) {
                 if (aln_c[1][i]!='I')
@@ -191,7 +220,7 @@ void problem() {
     delete[] seq;
 }
 
-int main() {
-    problem();
+int main(int argc, char** argv) {
+    problem(argv);
     return 0;
 }

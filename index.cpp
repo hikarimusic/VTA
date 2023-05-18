@@ -5,6 +5,15 @@
 #include <iostream>
 #include <string>
 
+void profile(char* seq_f, std::uint32_t& len) {
+    std::ifstream infile;
+    infile.open(seq_f, std::ios::binary);
+    infile.seekg(0, std::ios::end);
+    len = infile.tellg();
+    len += 1024;
+    infile.close();
+}
+
 void write_acgt(std::uint32_t* seq, std::uint32_t pos, char nuc) {
     std::uint32_t box = pos >> 4;
     std::uint32_t pnt = (0b1111 - pos & 0b1111) << 1;
@@ -184,6 +193,7 @@ void build(std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint3
         delete[] pmt;
         delete[] tmp;
         delete[] pos;
+        delete[] nxt;
         delete[] cnt;
         gpc += com;
     }
@@ -216,13 +226,14 @@ void save(char* seq_f, std::string& chr, std::uint32_t len, std::uint32_t* seq, 
 void index(char** argv) {
     std::time_t start, finish;
     time(&start);
-    std::string chr{};
     std::uint32_t len{};
-    std::uint32_t* seq{new std::uint32_t[268435456]{}};
+    profile(argv[1], len);
+    std::string chr{};
+    std::uint32_t* seq{new std::uint32_t[len>>2]{}};
+    std::uint32_t* sfa{new std::uint32_t[len+4]{}};
+    std::uint32_t* bwt{new std::uint32_t[len>>2]{}};
+    std::uint32_t* occ{new std::uint32_t[len+16]{}};
     read(argv[1], chr, len, seq);
-    std::uint32_t* sfa{new std::uint32_t[1073741824]{}};
-    std::uint32_t* bwt{new std::uint32_t[1073741824]{}};
-    std::uint32_t* occ{new std::uint32_t[268435456]{}};
     build(len, seq, sfa, bwt, occ);
     save(argv[1], chr, len, seq, sfa, bwt, occ);
     delete[] seq;
