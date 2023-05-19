@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <ctime>
 #include <deque>
@@ -174,16 +175,16 @@ void locate(std::string& chr, std::int64_t& pos, std::vector<std::string>& chr_n
 }
 
 struct seed {
-    int qs{};
-    int qe{};
+    std::int64_t qs{};
+    std::int64_t qe{};
     std::int64_t rs{};
     std::int64_t re{};
     int fg{};
 };
 
 struct cluster {
-    int fg{};
-    int nc{};
+    std::int64_t fg{};
+    std::int64_t nc{};
     std::vector<seed> seds;
 };
 
@@ -269,8 +270,7 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 }
 
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
-    const int proc{1};
-    const int s_wid{50};
+    const double exp{1.2};
     const int gap_1{50};
     const int gap_2{1000};
     const int flk{2};
@@ -303,46 +303,39 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         qryn[1] = qryn[1].substr(1, qryn[1].find(' ')-1);
         std::vector<std::string> seqs{qrys[0], rcseq(qrys[0]), qrys[1], rcseq(qrys[1])};
         std::vector<seed> seds;
-        std::unordered_set<std::int64_t> sedt[2];
         for (int fg=0; fg<4; ++fg) {
             std::string qry = seqs[fg];
-            int qe{}, qen{};
-            for (int qe=seqs[fg].size(); qe>0;) {
-                std::int64_t head = 0;
-                std::int64_t tail = len;
-                if (proc)
-                    sedt[1].clear();
-                qen = 10000;
-                for (int qp=qe-1; qp>=0; --qp) {
-                    head = lfm(head, cti(qry[qp]), len, sfa, bwt, occ);
-                    tail = lfm(tail, cti(qry[qp]), len, sfa, bwt, occ);
-                    if ((tail-head)<=s_wid) {
-                        for (std::int64_t rps=head; rps<tail; ++rps) {
-                            std::int64_t rp = rpm(rps, len, sfa, bwt, occ);
-                            if (!proc || sedt[0].find(rp+qry.size()-qp)==sedt[0].end()) {
-                                int qs{}; 
-                                for (qs=qp-1; qs>=0; --qs) {
-                                    if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
-                                        break;
-                                }
-                                qen = std::min(qen, qs);
-                                qs += 1;
-                                seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
+            std::int64_t qe{}, qp{}, qs{}, rp{};
+            std::int64_t hdi{}, tli{}, hdo{}, tlo{};
+            for (qe=seqs[fg].size(), qp=qe; qe>0; --qe) {
+                hdi = hdo;
+                tli = tlo;
+                hdo = 0;
+                tlo = len;
+                for (int qps=qe-1; qps>=qp; --qps) {
+                    hdo = lfm(hdo, cti(qry[qps]), len, sfa, bwt, occ);
+                    tlo = lfm(tlo, cti(qry[qps]), len, sfa, bwt, occ);
+                }
+                for (--qp; qp>=0; --qp) {
+                    hdi = lfm(hdi, cti(qry[qp]), len, sfa, bwt, occ);
+                    tli = lfm(tli, cti(qry[qp]), len, sfa, bwt, occ);
+                    hdo = lfm(hdo, cti(qry[qp]), len, sfa, bwt, occ);
+                    tlo = lfm(tlo, cti(qry[qp]), len, sfa, bwt, occ);
+                    if ((tlo-hdo)<(int)std::pow(exp, qe-qp)) {
+                        for (std::int64_t rps=hdo; rps<tlo; ++rps) {
+                            if (hdi!=tli && rps>=hdi && rps<tli)
+                                continue;
+                            rp = rpm(rps, len, sfa, bwt, occ);
+                            for (qs=qp-1; qs>=0; --qs) {
+                                if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
+                                    break;
                             }
-                            if (proc)
-                                sedt[1].insert(rp+qry.size()-qp);
+                            qs += 1;
+                            seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
                         }
-                        if (proc)
-                            sedt[0].swap(sedt[1]);
                         break;
                     }
                 }
-                if (proc)
-                    qe -= proc;
-                else if (qen==10000)
-                    qe -= 1;
-                else
-                    qe = qen;
             }
         }
         std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
