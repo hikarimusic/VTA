@@ -280,11 +280,13 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
     const int flk{2};
     std::vector<std::string> seqs{seq1, rcseq(seq1), seq2, rcseq(seq2)};
     std::vector<seed> seds;
+    // clock_t tPre = clock();
     for (int fg=0; fg<4; ++fg) {
         std::string qry = seqs[fg]; 
         std::int64_t qe{}, qp{}, qs{}, rp{};
         std::int64_t hdi{}, tli{}, hdo{}, tlo{};
         for (qe=seqs[fg].size(), qp=qe; qe>0; --qe) {
+            // tPre = clock();
             hdi = hdo;
             tli = tlo;
             hdo = 0;
@@ -315,7 +317,24 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             }
         }
     }
+    
+    // std::string chrt;
+    // std::int64_t post{};
+    // for (std::int64_t i=0; i<seds.size(); ++i) {
+    //     post = seds[i].rs;
+    //     locate(chrt, post, chr_n, chr_c);
+    //     if (chrt=="NC_000008.11" && post>12072000 && post<12073000)
+    //         std::cout << chrt << ' ' << post << ' ' << seds[i].qe-seds[i].qs << " / ";
+    // }
+
+    // std::cout << "Seed Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    // tPre = clock();
+
     std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
+
+    // std::cout << "Sort Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    // tPre = clock();
+
     std::vector<cluster> cls;
     int now[4]{-1, -1, -1, -1};
     int chs[4]{-1, -1, -1, -1};
@@ -407,6 +426,27 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
             }
         }
     }
+
+    // std::cout << "Clus Com" << (double)(clock() - tPre)/CLOCKS_PER_SEC << '\n';
+    // tPre = clock();
+
+    // for (std::int64_t i=0; i<cls.size(); ++i) {
+    //     post = cls[i].seds[0].rs;
+    //     locate(chrt, post, chr_n, chr_c);
+    //     if (chrt=="NC_000008.11" && post>12072000 && post<12073000) {
+    //         std::cout << '\n' << i << ' ' <<  cls[i].nc << ": ";
+    //         for (auto sed : cls[i].seds) {
+    //             post = sed.rs;
+    //             locate(chrt, post, chr_n, chr_c);
+    //             std::cout << chrt << ' ' << post << ' ' << sed.qe-sed.qs << " / ";
+    //         }
+    //         std::cout << '\n';
+    //     }
+    // }
+
+    // for (int i=0; i<4; ++i)
+    //     std::cout << chs[i] << ' ' << val[i] << '\n';
+
     std::string chr[2]{};
     std::int64_t pos[2]{};
     int rf[2]{};

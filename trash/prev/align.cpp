@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cmath>
 #include <cstdint>
 #include <ctime>
 #include <deque>
@@ -175,16 +174,16 @@ void locate(std::string& chr, std::int64_t& pos, std::vector<std::string>& chr_n
 }
 
 struct seed {
-    std::int64_t qs{};
-    std::int64_t qe{};
+    int qs{};
+    int qe{};
     std::int64_t rs{};
     std::int64_t re{};
     int fg{};
 };
 
 struct cluster {
-    std::int64_t fg{};
-    std::int64_t nc{};
+    int fg{};
+    int nc{};
     std::vector<seed> seds;
 };
 
@@ -270,11 +269,10 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 }
 
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
-    const double bas{0.6};
-    const double exp{1.3};
+    const int proc{1};
+    const int s_wid{50};
     const int gap_1{50};
     const int gap_2{1000};
-    const int lap{2};
     const int flk{2};
     std::ifstream qry1_f;
     std::ifstream qry2_f;
@@ -305,46 +303,53 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         qryn[1] = qryn[1].substr(1, qryn[1].find(' ')-1);
         std::vector<std::string> seqs{qrys[0], rcseq(qrys[0]), qrys[1], rcseq(qrys[1])};
         std::vector<seed> seds;
+        std::unordered_set<std::int64_t> sedt[2];
         for (int fg=0; fg<4; ++fg) {
             std::string qry = seqs[fg];
-            std::int64_t qe{}, qp{}, qs{}, rp{};
-            std::int64_t hdi{}, tli{}, hdo{}, tlo{};
-            for (qe=seqs[fg].size(), qp=qe; qe>0; --qe) {
-                hdi = hdo;
-                tli = tlo;
-                hdo = 0;
-                tlo = len;
-                for (int qps=qe-1; qps>=qp; --qps) {
-                    hdo = lfm(hdo, cti(qry[qps]), len, sfa, bwt, occ);
-                    tlo = lfm(tlo, cti(qry[qps]), len, sfa, bwt, occ);
-                }
-                for (--qp; qp>=0; --qp) {
-                    hdi = lfm(hdi, cti(qry[qp]), len, sfa, bwt, occ);
-                    tli = lfm(tli, cti(qry[qp]), len, sfa, bwt, occ);
-                    hdo = lfm(hdo, cti(qry[qp]), len, sfa, bwt, occ);
-                    tlo = lfm(tlo, cti(qry[qp]), len, sfa, bwt, occ);
-                    if ((tlo-hdo)<(int)(bas*std::pow(exp, qe-qp))) {
-                        for (std::int64_t rps=hdo; rps<tlo; ++rps) {
-                            if (hdi!=tli && rps>=hdi && rps<tli)
-                                continue;
-                            rp = rpm(rps, len, sfa, bwt, occ);
-                            for (qs=qp-1; qs>=0; --qs) {
-                                if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
-                                    break;
+            int qe{}, qen{};
+            for (int qe=seqs[fg].size(); qe>0;) {
+                std::int64_t head = 0;
+                std::int64_t tail = len;
+                if (proc)
+                    sedt[1].clear();
+                qen = 10000;
+                for (int qp=qe-1; qp>=0; --qp) {
+                    head = lfm(head, cti(qry[qp]), len, sfa, bwt, occ);
+                    tail = lfm(tail, cti(qry[qp]), len, sfa, bwt, occ);
+                    if ((tail-head)<=s_wid) {
+                        for (std::int64_t rps=head; rps<tail; ++rps) {
+                            std::int64_t rp = rpm(rps, len, sfa, bwt, occ);
+                            if (!proc || sedt[0].find(rp+qry.size()-qp)==sedt[0].end()) {
+                                int qs{}; 
+                                for (qs=qp-1; qs>=0; --qs) {
+                                    if (qry[qs]!=itc(nucs(seq, len, rp-qp+qs, 1)))
+                                        break;
+                                }
+                                qen = std::min(qen, qs);
+                                qs += 1;
+                                seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
                             }
-                            qs += 1;
-                            seds.push_back({qs, qe, rp-qp+qs, rp+qe-qp, fg});
+                            if (proc)
+                                sedt[1].insert(rp+qry.size()-qp);
                         }
+                        if (proc)
+                            sedt[0].swap(sedt[1]);
                         break;
                     }
                 }
+                if (proc)
+                    qe -= proc;
+                else if (qen==10000)
+                    qe -= 1;
+                else
+                    qe = qen;
             }
         }
         std::sort(seds.begin(), seds.end(), [](seed a, seed b){return (a.rs<b.rs) ? 1 : 0;});
         std::vector<cluster> cls;
         int now[4]{-1, -1, -1, -1};
         int chs[4]{-1, -1, -1, -1};
-        int val[4]{}, lav[4]{};
+        int val[4]{};
         int l{}, fg{};
         for (int i=0; i<seds.size(); ++i) {
             fg = seds[i].fg;
@@ -356,7 +361,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
             if ((seds[i].rs > cls[now[fg]].seds.back().re + gap_1)) {
                 if (cls[now[fg]].nc > val[fg]) {
                     chs[fg] = now[fg];
-                    lav[fg] = val[fg];
                     val[fg] = cls[now[fg]].nc;
                 }
                 for (int j=now[fg]-1; j>=0; --j) {
@@ -365,12 +369,10 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                     if (fg>>1 != cls[j].fg>>1) {
                         if (cls[now[fg]].nc+cls[j].nc>val[fg]) {
                             chs[fg] = now[fg];
-                            lav[fg] = val[fg];
                             val[fg] = cls[now[fg]].nc+cls[j].nc;
                         }
                         if (cls[now[fg]].nc+cls[j].nc>val[cls[j].fg]) {
                             chs[cls[j].fg] = j;
-                            lav[cls[j].fg] = val[cls[j].fg];
                             val[cls[j].fg] = cls[now[fg]].nc+cls[j].nc;
                         }
                     }
@@ -379,24 +381,21 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 now[fg] = cls.size()-1;
             }
             else {
-                int skp{};
-                while (!cls[now[fg]].seds.empty() && skp==0) {
-                    if (seds[i].rs+lap<cls[now[fg]].seds.back().re || seds[i].qs+lap<cls[now[fg]].seds.back().qe) {
-                        if ((seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs)) {
-                            cls[now[fg]].nc -= (cls[now[fg]].seds.back().qe - cls[now[fg]].seds.back().qs);
-                            cls[now[fg]].seds.pop_back();
-                        }
-                        else
-                            skp = 1;
-                    }
+                if (seds[i].rs<cls[now[fg]].seds.back().re) {
+                    if ((seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+                        cls[now[fg]].seds.pop_back();
                     else
-                        skp = -1;
+                        continue;
                 }
-                if (skp==1)
-                    continue;
+                else if (seds[i].qs<cls[now[fg]].seds.back().qe) {
+                    if ((seds[i].qe-seds[i].qs)>(cls[now[fg]].seds.back().qe-cls[now[fg]].seds.back().qs))
+                        cls[now[fg]].seds.pop_back();
+                    else
+                        continue;
+                }
                 if (cls[now[fg]].seds.empty()) {
-                    cls[now[fg]].nc = seds[i].qe-seds[i].qs;
                     cls[now[fg]].seds.push_back({seds[i].qs, seds[i].qe, seds[i].rs, seds[i].re, seds[i].fg});
+                    cls[now[fg]].nc = seds[i].qe-seds[i].qs;
                 }
                 else {
                     l = std::min(std::min((std::int64_t) seds[i].qe-cls[now[fg]].seds.back().qe, seds[i].re-cls[now[fg]].seds.back().re), (std::int64_t) seds[i].qe-seds[i].qs);
@@ -412,7 +411,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 continue;
             if (cls[now[i]].nc > val[i]) {
                 chs[i] = now[i];
-                lav[i] = val[i];
                 val[i] = cls[now[i]].nc;
             }
             for (int j=now[i]-1; j>=0; --j) {
@@ -421,12 +419,10 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 if (i>>1 != cls[j].fg>>1) {
                     if (cls[now[i]].nc+cls[j].nc>val[i]) {
                         chs[i] = now[i];
-                        lav[i] = val[i];
                         val[i] = cls[now[i]].nc+cls[j].nc;
                     }
                     if (cls[now[i]].nc+cls[j].nc>val[cls[j].fg]) {
                         chs[cls[j].fg] = j;
-                        lav[cls[j].fg] = val[cls[j].fg];
                         val[cls[j].fg] = cls[now[i]].nc+cls[j].nc;
                     }
                 }
@@ -437,7 +433,6 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
         int rf[2]{};
         std::vector<int> aln_i[2];
         std::vector<char> aln_c[2];
-        int scr[2]{};
         for (int q=0; q<2; ++q) {
             if (chs[q*2+1]==-1 && chs[q*2]==-1) {
                 chr[q] = "NA";
@@ -448,11 +443,10 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
                 rf[q] = (chs[q*2+1]==-1)?0:1;
             else if (val[q*2+1]>val[q*2])
                 rf[q] = 1;
-            else if (val[q*2+1]==val[q*2])
-                rf[q] = q ? (1-rf[q]) : (cls[chs[q*2+1]].nc>cls[chs[q*2]].nc);
+            else if (val[q*2+1]==val[q*2] && cls[chs[q*2+1]].nc>cls[chs[q*2]].nc)
+                rf[q] = 1;
             else
                 rf[q] = 0;
-            scr[q] = val[q*2+rf[q]] - std::max(lav[q*2+rf[q]], val[q*2+1-rf[q]]);
             std::string qry = seqs[q*2+rf[q]];
             std::vector<seed> sed_m = cls[chs[q*2+rf[q]]].seds;
             std::string sa;
@@ -515,7 +509,7 @@ void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa
             maps_f << flag << '\t';
             maps_f << chr[q] << '\t';
             maps_f << pos[q] << '\t';
-            maps_f << scr[q] << '\t';
+            maps_f << 255 << '\t';
             std::vector<int> nla_i;
             std::vector<char> nla_c;
             for (int i=0; i<aln_i[q].size(); ++i) {
