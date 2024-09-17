@@ -274,8 +274,8 @@ void map(std::string seq1, std::string seq2, std::uint32_t len, std::uint32_t* s
     capitalize(seq2);
     const double bas{1};
     const double exp{1.2};
-    const int gap_1{50};
-    const int gap_2{1000};
+    const int gap_1{10000};
+    const int gap_2{10000};
     const int lap{2};
     const int flk{2};
     std::vector<std::string> seqs{seq1, rcseq(seq1), seq2, rcseq(seq2)};

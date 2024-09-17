@@ -272,8 +272,8 @@ void dp_ed(std::string& sa, std::string& sb, std::vector<int>& aln_i, std::vecto
 void maps(char** argv, std::uint32_t len, std::uint32_t* seq, std::uint32_t* sfa, std::uint32_t* bwt, std::uint32_t* occ, std::vector<std::string>& chr_n, std::vector<std::uint32_t>& chr_c) {
     const double bas{1};
     const double exp{1.2};
-    const int gap_1{50};
-    const int gap_2{1000};
+    const int gap_1{10000};
+    const int gap_2{10000};
     const int lap{2};
     const int flk{2};
     std::ifstream qry1_f;
