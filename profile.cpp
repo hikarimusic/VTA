@@ -114,6 +114,8 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
         }
         int fg = 0;
         for (int p=gl; p>=0 && p>gl-10; --p) { // search exon
+            if (pos_i > genelist[chr_i][p].end)
+                continue;
             for (auto ex : genelist[chr_i][p].exons) {
                 // std::cout << std::min(pos_i+(int)seq.size(),ex.second) - std::max(pos_i,ex.first) << '\n';
                 if ((std::min(pos_i+(int)seq.size(),ex.second)-std::max(pos_i,ex.first))*3 > (int)seq.size()) { // Overlap part > 1/2
