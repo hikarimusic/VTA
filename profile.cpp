@@ -15,6 +15,8 @@ struct Gene {
     std::vector<std::pair<int, int>> exons;
     int count;
     int length;
+    double tpm;
+    double fpkm;
 };
 
 void parseGTF(const std::string &filename, std::vector<std::vector<Gene>> &genelist) {
@@ -85,6 +87,7 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
     std::ifstream file(filename);
     std::string line;
     int read_c = 0;
+    std::string cur_q = ""; // current query, for checking paired-reads
     while (std::getline(file, line)) {
         if (line[0] == '@') continue;
         std::istringstream iss(line);
@@ -112,26 +115,79 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
             else
                 gl = gm;
         }
-        int fg = 0;
+        // int fg = 0;
+        int find_fg = 0; // match 1 gene, skip other genes
+        // std::cout << chr_i << ' ' << pos_i << '\n';
         for (int p=gl; p>=0 && p>gl-10; --p) { // search exon
             if (pos_i > genelist[chr_i][p].end)
                 continue;
             for (auto ex : genelist[chr_i][p].exons) {
                 // std::cout << std::min(pos_i+(int)seq.size(),ex.second) - std::max(pos_i,ex.first) << '\n';
-                if ((std::min(pos_i+(int)seq.size(),ex.second)-std::max(pos_i,ex.first))*3 > (int)seq.size()) { // Overlap part > 1/2
-                    genelist[chr_i][p].count += 1;
+                if ((std::min(pos_i+static_cast<int>(seq.size()),ex.second)-std::max(pos_i,ex.first))*3 > static_cast<int>(seq.size())) { // Overlap part > 1/2
+                    if (qname == cur_q && qname != "") {
+                        genelist[chr_i][p].count += 1;
+                        cur_q = "";
+                        // std::cout << genelist[chr_i][p].name << '\n';
+                    }
+                    else {
+                        cur_q = qname;
+                    }
+                    // genelist[chr_i][p].count += 1;
                     // std::cout << chr_i << ' ' << pos_i << ' ' << genelist[chr_i][p].name << '\n';
-                    fg = 1;
+                    // fg = 1;
+                    find_fg = 1;
                     break;
                 }
             }
+            if (find_fg)
+                break;
         }
         std::cout <<'\r' << "[Find Gene] " << ++read_c << "                    " << std::flush;
+
         // if (!fg)
             // std::cout << chr_i << ' ' << pos_i << '\n';
         // std::cout << chr_i << '\n';
     }
     std::cout << '\r' << "[Find Gene] " << "Complete" << "                    \n" << std::flush; 
+}
+
+void save(const std::string &filename, std::vector<std::vector<Gene>> &genelist) {
+    std::ofstream file(filename);
+    int frag_sum = 0;
+    double rpk_sum = 0;
+    for (int i=1; i<=25; ++i) { // total fragments, total reads per kilobase
+        for (Gene &g : genelist[i]) {
+            frag_sum += g.count;
+            rpk_sum += static_cast<double>(g.count) / (static_cast<double>(g.length) / 1000.0);
+        }
+    }
+    for (int i=1; i<=25; ++i) { // tpm, rpkm
+        for (Gene &g : genelist[i]) {
+            double rpk = static_cast<double>(g.count) / (static_cast<double>(g.length) / 1000.0);
+            g.tpm = rpk / (rpk_sum / 1000000.0);
+            g.fpkm = rpk / (frag_sum / 1000000.0);
+        }
+    }
+    file << "gene_id\tgene_name\tgene_type\tgene_count\ttpm\tfpkm\n";
+    for (int i=1; i<=25; ++i) {
+        for (Gene &g : genelist[i]) {
+            file << g.id << "\t" << g.name << "\t" << g.type << "\t" << g.count << "\t" << g.tpm << "\t" << g.fpkm << "\n";
+        }
+    }
+
+    std::vector<std::pair<double,std::string>> gex;
+    for (int i=1; i<=25; ++i) { // test
+        for (Gene &g : genelist[i]) {
+            gex.push_back({g.tpm, g.name});
+        }
+    }
+    sort(gex.begin(), gex.end(), std::greater<std::pair<double, std::string>>());
+    for (int i=0; i<100; ++i) {
+        std::cout << gex[i].second << '\t' << gex[i].first << '\n';
+    }
+
+    file.close();
+    std::cout << '\r' << "[Save Profile] " << "Complete" << "                    \n" << std::flush;
 }
 
 void profile(char** argv) {
@@ -140,6 +196,7 @@ void profile(char** argv) {
     std::vector<std::vector<Gene>> genelist(30); // genes in each chromosome
     parseGTF(argv[1], genelist);
     parseSAM(argv[2], genelist);
+    save(argv[3], genelist);
     time(&finish);
     std::cout << '\r' << "[Finish] Total time: " << difftime(finish, start) << " seconds" << "                    \n" << std::flush;
 }

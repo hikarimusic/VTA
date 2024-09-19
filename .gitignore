@@ -43,9 +43,11 @@
 *.sam
 *.seq
 *.sfa
+*.tsv
 *.txt
 index
 align
+profile
 tools
 exp/validate/problem
 exp/validate/judge
