@@ -48,6 +48,7 @@
 index
 align
 profile
+variant
 tools
 exp/validate/problem
 exp/validate/judge

@@ -5,7 +5,8 @@
 #include <iostream>
 #include <string>
 
-void profile(char* seq_f, std::uint32_t& len) {
+// Determine length of reference sequence
+void profile(char* seq_f, std::uint32_t& len) { // (file, length)
     std::ifstream infile;
     infile.open(seq_f, std::ios::binary);
     infile.seekg(0, std::ios::end);
@@ -14,26 +15,27 @@ void profile(char* seq_f, std::uint32_t& len) {
     infile.close();
 }
 
-void write_acgt(std::uint32_t* seq, std::uint32_t pos, char nuc) {
-    std::uint32_t box = pos >> 4;
-    std::uint32_t pnt = (0b1111 - pos & 0b1111) << 1;
-    if (nuc == 'A' || nuc == 'a' || nuc == 0) {
-        seq[box] &= ~(0b01<<pnt);
-        seq[box] &= ~(0b10<<pnt);
+// Encode nucleotide into packed form
+void write_acgt(std::uint32_t* seq, std::uint32_t pos, char nuc) { // (sequence, position, nucleotide)
+    std::uint32_t box = pos >> 4; // Find the box of nucleotide (1 nuc = 2 bit, so 16 nucs = uint32)
+    std::uint32_t pnt = (0b1111 - pos & 0b1111) << 1; // Find the position in box (from left to right, so 00112233445566778899aabbccddeeff)
+    if (nuc == 'A' || nuc == 'a' || nuc == 0) { // A encoded to 00
+        seq[box] &= ~(0b01<<pnt); // encode _0
+        seq[box] &= ~(0b10<<pnt); // encode 0_
     }
-    else if (nuc == 'C' || nuc == 'c' || nuc == 1) {
-        seq[box] |= (0b01<<pnt);
-        seq[box] &= ~(0b10<<pnt);
+    else if (nuc == 'C' || nuc == 'c' || nuc == 1) { // C encoded to 01
+        seq[box] |= (0b01<<pnt);  // encode _1
+        seq[box] &= ~(0b10<<pnt); // encode 0_
     }
-    else if (nuc == 'G' || nuc == 'g' || nuc == 2) {
-        seq[box] &= ~(0b01<<pnt);
-        seq[box] |= (0b10<<pnt);
+    else if (nuc == 'G' || nuc == 'g' || nuc == 2) { // G encoded to 10
+        seq[box] &= ~(0b01<<pnt); // encode _0
+        seq[box] |= (0b10<<pnt);  // encode 1_
     }
-    else if (nuc == 'T' || nuc == 't' || nuc == 3) {
-        seq[box] |= (0b01<<pnt);
-        seq[box] |= (0b10<<pnt);
+    else if (nuc == 'T' || nuc == 't' || nuc == 3) { // T encoded to 11
+        seq[box] |= (0b01<<pnt); // encode _1
+        seq[box] |= (0b10<<pnt); // encode 1_
     }
-    else {
+    else { // Randomly encode if not ACGT
         if (std::rand()&1)
             seq[box] &= ~(0b01<<pnt);
         else
@@ -45,7 +47,8 @@ void write_acgt(std::uint32_t* seq, std::uint32_t pos, char nuc) {
     }
 }
 
-void read(char* seq_f, std::string& chr, std::uint32_t& len, std::uint32_t* seq) {
+// Read reference sequence and encode into packed form
+void read(char* seq_f, std::string& chr, std::uint32_t& len, std::uint32_t* seq) { // (file, chromosomes, length, sequence)
     std::ifstream infile;
     infile.open(seq_f, std::ios::binary);
     infile.seekg(0, std::ios::end);
@@ -54,59 +57,60 @@ void read(char* seq_f, std::string& chr, std::uint32_t& len, std::uint32_t* seq)
     infile.seekg(0, std::ios::beg);
     infile.read((char*)read, seq_l);
     infile.close();
-    std::uint32_t read_f{0}, nuc_s{0}, nuc_e{0};
-    std::string chr_name{};
+    std::uint32_t read_f{0}, nuc_s{0}, nuc_e{0}; // (reading mode, start position, end position)
+    std::string chr_name{}; // Chromosome name
     for (std::uint32_t i=0; i<=seq_l; ++i) {
-        if (!(read[i])) {
+        if (!(read[i])) { // End of file
             if (nuc_e-nuc_s)
-                chr += chr_name + '\n' + std::to_string(nuc_e-nuc_s) + '\n';
+                chr += chr_name + '\n' + std::to_string(nuc_e-nuc_s) + '\n'; // Write previous chromosome name and count
             break;
         }
-        if (read[i]=='>') {
-            if (nuc_e-nuc_s) 
-                chr += chr_name + '\n' + std::to_string(nuc_e-nuc_s) + '\n';
+        if (read[i]=='>') { // New entry
+            if (nuc_e-nuc_s)
+                chr += chr_name + '\n' + std::to_string(nuc_e-nuc_s) + '\n'; // Write previous chromosome name and count
             nuc_s = nuc_e;
             chr_name = "";
-            if (read[i+1]=='N' && read[i+2]=='C')
-                read_f = 1;
+            if (read[i+1]=='N' && read[i+2]=='C') // Valid chromosome starting with "NC"
+                read_f = 1; // Mode: chromosome name
             else
-                read_f = 0;
+                read_f = 0; // Mode: skip
         }
         else if (read[i]=='\n' && read_f==1)
-            read_f = 2;
-        else if (read_f==1)
+            read_f = 2; // Mode: nucleotide
+        else if (read_f==1) // Read chromosome name
             chr_name += read[i];
-        else if (read_f==2 && read[i]!='\n') {
+        else if (read_f==2 && read[i]!='\n') { // Read nucleotide
             write_acgt(seq, nuc_e, read[i]);
             nuc_e += 1;
             if ((nuc_e % 1024)==0)
                 std::cout << '\r' << "[Read Sequence] " << nuc_e << "/" << seq_l << "                    " << std::flush;
         }
     }
-    len = (((nuc_e>>6)+1)<<6);
+    len = (((nuc_e>>6)+1)<<6); // Padding to 64
     for (std::uint32_t i=nuc_e; i<len; ++i)
         write_acgt(seq, i, 'T');
     delete[] read;
     std::cout << '\r' << "[Read Sequence] " << "Complete" << "                    \n" << std::flush;
 } 
 
-std::uint32_t nucs(std::uint32_t* seq, std::uint32_t len, std::uint32_t p, std::uint32_t r) {
-    std::uint32_t b = p >> 4;
-    std::uint32_t h = p & 0b1111;
-    std::uint32_t t = h + r;
-    if (p >= len) {
+// Extract a contiguous segement of nucleotides
+std::uint32_t nucs(std::uint32_t* seq, std::uint32_t len, std::uint32_t p, std::uint32_t r) { // (sequence, length, position, number)
+    std::uint32_t b = p >> 4; // Find the box of the start nuc
+    std::uint32_t h = p & 0b1111; // Find the position of the start nuc (to the current box)
+    std::uint32_t t = h + r; // Find the position of the end nuc (to the current box)
+    if (p >= len) { // Position is beyond the end of sequence
         return 0;
     }
-    else if (p+r >= len) {
+    else if (p+r >= len) { // Range extends beyond the end of sequence
         t -= 16;
-        return (((seq[b]<<(h<<1))>>(h<<1))<<(t<<1));
+        return (((seq[b]<<(h<<1))>>(h<<1))<<(t<<1)); //  Discard left nucs and make space for remaining dummy As
     }
-    else if (t <= 16) {
-        return ((seq[b]<<(h<<1))>>((16-r)<<1));
+    else if (t <= 16) { // Range fits within one box
+        return ((seq[b]<<(h<<1))>>((16-r)<<1)); // Discard left nucs and align to right
     }
-    else {
+    else { // Range spans two boxes
         t -= 16;
-        return  ((((seq[b]<<(h<<1))>>(h<<1))<<(t<<1))+(seq[b+1]>>((16-t)<<1)));
+        return  ((((seq[b]<<(h<<1))>>(h<<1))<<(t<<1))+(seq[b+1]>>((16-t)<<1))); // Box1: Discard left nucs and make space for box2. Box2: Discard right nucs
     }
 }
 

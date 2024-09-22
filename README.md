@@ -1,23 +1,31 @@
 # VTA
-An variance-tolerant aligner for next-generation sequencing
+A Complete Library for NGS Data Analysis
 
 ## Usage
 Compile the files:
 ```sh
 make
 ```
+
 Index the reference genome:
 ```sh
-./index reference_genome.fna
+./index GRCh38.fna
 ```
+
 Align the sequences:
 ```sh
-./align reference_genome.fna input1.fq input2.fq output.sam
+./align GRCh38.fna input1.fq input2.fq output.sam
 ```
-Tools:
+
+Profile the mRNA expression:
 ```sh
-./tools reference_genome.fna
+./profile gencode.gtf output.sam output.tsv
 ```
+
+<!-- Tools:
+```sh
+./tools GRCh38.fna
+``` -->
 
 ## Algorithm
 * **Index**
@@ -28,7 +36,7 @@ Tools:
 * **Align**
     * Seeding
     * Clustering
-    * DP (edit distance)
+    * DP
 * **Performance**
     * Index: GRCH38 in 4 hours
     * Align: 1000000 * 200 bp in 2000 seconds
