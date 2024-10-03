@@ -34,15 +34,18 @@
 # User Define
 *.bwt
 *.chr
+*.csv
 *.fa
 *.fastq
 *.fna
 *.fq
 *.gtf
 *.occ
+*.png
 *.sam
 *.seq
 *.sfa
+*.soft
 *.tsv
 *.txt
 index
@@ -55,3 +58,6 @@ exp/validate/judge
 exp/simulate/GRCh_clean
 exp/simulate/problem
 exp/simulate/judge
+
+# Keep
+!requirements.txt

@@ -7,6 +7,11 @@ Compile the files:
 make
 ```
 
+Install Python packages:
+```sh
+pip install -r requirements.txt
+```
+
 Index the reference genome:
 ```sh
 ./index GRCh38.fna
@@ -22,22 +27,16 @@ Profile the mRNA expression:
 ./profile gencode.gtf output.sam output.tsv
 ```
 
+Analyze the profiles:
+```sh
+python3 profile.py profile_dir profile_dir/cohort.csv
+```
+
 <!-- Tools:
 ```sh
 ./tools GRCh38.fna
 ``` -->
 
-## Algorithm
-* **Index**
-    * Count sort
-    * Suffix array
-    * Burrows-Wheeler Transform
-    * FM index
-* **Align**
-    * Seeding
-    * Clustering
-    * DP
-* **Performance**
-    * Index: GRCH38 in 4 hours
-    * Align: 1000000 * 200 bp in 2000 seconds
-    * Memory: <10 gigabytes
+------------------------
+
+*(This library mainly focuses on the analysis of aligned data. If you found the index and align parts too slow, you can use other tools such as [bwa](https://github.com/lh3/bwa) for alignment, and then paste the .sam files here to perform further analysis)*

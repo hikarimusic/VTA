@@ -80,7 +80,6 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
     std::ifstream file(filename);
     std::string line;
     int read_c = 0;
-    std::string cur_q = ""; // current query, for checking paired-reads
     while (std::getline(file, line)) {
         if (line[0] == '@') continue;
         std::istringstream iss(line);
@@ -110,13 +109,7 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
                 continue;
             for (auto ex : genelist[chr_i][p].exons) {
                 if ((std::min(pos_i+static_cast<int>(seq.size()),ex.second)-std::max(pos_i,ex.first))*3 > static_cast<int>(seq.size())) { // Overlap part > 1/2
-                    if (qname == cur_q && qname != "") {
-                        genelist[chr_i][p].count += 1;
-                        cur_q = "";
-                    }
-                    else {
-                        cur_q = qname;
-                    }
+                    genelist[chr_i][p].count += 1;
                     find_fg = 1;
                     break;
                 }
@@ -124,7 +117,8 @@ void parseSAM(const std::string &filename, std::vector<std::vector<Gene>> &genel
             if (find_fg)
                 break;
         }
-        std::cout <<'\r' << "[Find Gene] " << ++read_c << "                    " << std::flush;
+        if (read_c%1024 == 0)
+            std::cout <<'\r' << "[Find Gene] " << ++read_c << "                    " << std::flush;
     }
     std::cout << '\r' << "[Find Gene] " << "Complete" << "                    \n" << std::flush; 
 }
