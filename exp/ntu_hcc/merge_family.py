@@ -23,8 +23,8 @@ def merge_data(hcc_data, liv_data, hcc_id_map, liv_id_map):
     for gsm_id, row in hcc_data.items():
         merged_row = {
             'sample': hcc_id_map.get(gsm_id, ''),
-            'ctnnb1 status': row['ctnnb1 status'],
             'etiology': row['etiology'],
+            'ctnnb1 status': row['ctnnb1 status'],
             'efs days': row['efs days'],
             'os days': row['os days']
         }
@@ -34,8 +34,8 @@ def merge_data(hcc_data, liv_data, hcc_id_map, liv_id_map):
     for gsm_id, row in liv_data.items():
         merged_row = {
             'sample': liv_id_map.get(gsm_id, ''),
-            'ctnnb1 status': row['disease'],
             'etiology': row['disease'],
+            'ctnnb1 status': row['disease'],
             'efs days': '',
             'os days': ''
         }
@@ -44,7 +44,7 @@ def merge_data(hcc_data, liv_data, hcc_id_map, liv_id_map):
     return merged_data
 
 def write_csv(data, filename):
-    fieldnames = ['sample', 'ctnnb1 status', 'etiology', 'efs days', 'os days']
+    fieldnames = ['sample', 'etiology', 'ctnnb1 status', 'efs days', 'os days']
     with open(filename, 'w', newline='') as file:
         writer = csv.DictWriter(file, fieldnames=fieldnames)
         writer.writeheader()

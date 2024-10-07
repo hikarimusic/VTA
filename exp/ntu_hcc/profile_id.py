@@ -52,15 +52,27 @@ def generate_pca_plot(df, output_file, hue_column):
     ddx11l2_index = df.columns.get_loc('DDX11L2')
     features = df.iloc[:, ddx11l2_index:]
     labels = df[hue_column]
+    sample_ids = df.iloc[:, 0]  # Assuming the first column contains sample IDs
+    
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features)
     pca = PCA(n_components=2)
     pca_result = pca.fit_transform(scaled_features)
+    
     pca_df = pd.DataFrame(data=pca_result, columns=['PC1', 'PC2'])
     pca_df[hue_column] = labels
+    pca_df['sample_id'] = sample_ids
+    
     mpl.style.use('ggplot')
     plt.figure(figsize=(12, 8))
-    sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=hue_column, palette='deep', s=100)
+    
+    scatter = sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=hue_column, palette='deep', s=100)
+    
+    # Add sample IDs as text labels
+    for line in range(0, pca_df.shape[0]):
+        scatter.text(pca_df.PC1[line], pca_df.PC2[line], pca_df.sample_id[line], 
+                     horizontalalignment='left', size='small', color='black', weight='semibold')
+    
     plt.title(f'PCA of RNA Expression Profiles (Colored by {hue_column})', fontsize=20)
     plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance explained)', fontsize=14)
     plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance explained)', fontsize=14)
