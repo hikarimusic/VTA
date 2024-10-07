@@ -50,10 +50,6 @@ def process_profiles(directory, cohort_file, output_dir):
     return result_df
 
 def generate_pca_plot(df, output_file, hue_column):
-    if os.path.exists(output_file):
-        print(f"[Skip] PCA already exists")
-        return
-    
     print(f"\r[Generate PCA] {hue_column} ...                    ", end='', flush=True)
     ddx11l2_index = df.columns.get_loc('DDX11L2')
     features = df.iloc[:, ddx11l2_index:]
@@ -201,7 +197,7 @@ def perform_differential_expression(df, group_column, group1, group2, output_dir
     plt.savefig(plot_file, dpi=300, bbox_inches='tight')
     plt.close()
     
-    print(f"\r[Differential Expression] Complete: {group_column}: {group1} vs {group2}                    ")
+    print(f"\r[Differential Expression] Complete {group_column}: {group1} vs {group2}                    ")
     return results
 
 # def generate_heatmap(df, group_column, groups, n_top_genes=50, output_dir='.'):
@@ -259,7 +255,7 @@ def perform_differential_expression(df, group_column, group1, group2, output_dir
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print("Usage: python3 profile.py <directory> <cohort> <comparison_config>")
+        print("Usage: python3 profile.py <directory> <cohort> <comparison>")
         sys.exit(1)
     
     directory = sys.argv[1]
@@ -280,6 +276,11 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     
     profile_df = process_profiles(directory, cohort_file, output_dir)
+    ddx11l2_index = profile_df.columns.get_loc('DDX11L2')
+    for column in profile_df.columns[1:ddx11l2_index]:
+        if profile_df[column].dtype == 'object' or pd.api.types.is_categorical_dtype(profile_df[column]):
+            pca_output_file = os.path.join(output_dir, f'PCA_{column}.png')
+            generate_pca_plot(profile_df, pca_output_file, column)
     
     # Read comparison configuration
     comparisons = read_comparison_config(comparison_config)
