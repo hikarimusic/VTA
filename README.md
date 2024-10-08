@@ -1,7 +1,8 @@
 # VTA
 A Complete Library for NGS Data Analysis
 
-## Usage
+## Setup
+
 Compile the files:
 ```sh
 make
@@ -11,6 +12,8 @@ Install Python packages:
 ```sh
 pip install -r requirements.txt
 ```
+
+## Raw Data Processing
 
 Index the reference genome:
 ```sh
@@ -27,16 +30,21 @@ Profile the mRNA expression:
 ./profile gencode.gtf output.sam output.tsv
 ```
 
-Analyze the profiles:
+*(This library mainly focuses on the analysis of aligned data. If you found the index and align parts too slow, you can use other tools such as [bwa](https://github.com/lh3/bwa) for alignment.)*
+
+## Expression Analysis
+
+Summarize the profiles:
 ```sh
-python3 profile.py profile_dir profile_dir/cohort.csv
+python3 summarize.py <cohort_file> <profile_dir> <value_type>
 ```
 
-<!-- Tools:
+Generate PCA plots:
 ```sh
-./tools GRCh38.fna
-``` -->
+python3 pca_plot.py <cohort_file> <group_column> <start_gene>
+```
 
-------------------------
-
-*(This library mainly focuses on the analysis of aligned data. If you found the index and align parts too slow, you can use other tools such as [bwa](https://github.com/lh3/bwa) for alignment, and then paste the .sam files here to perform further analysis)*
+Perform clustering analysis:
+```sh
+python3 clustering.py <cohort_file> <group_column> <start_gene>
+```

@@ -41,6 +41,7 @@
 *.fq
 *.gtf
 *.occ
+*.pdf
 *.png
 *.sam
 *.seq
