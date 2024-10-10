@@ -5,167 +5,147 @@ import numpy as np
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import pdist
 import matplotlib.pyplot as plt
+from matplotlib.patches import Rectangle
 import seaborn as sns
+from sklearn.preprocessing import StandardScaler
 
-def generate_dendrogram_heatmap(cohort_file, group_column, start_gene, n_genes=1000):
-    print(f"[Clustering] Starting analysis for {group_column}...", flush=True)
-    
+def generate_dendrogram_heatmap(cohort_file, group_column, n_genes=1000):
+    print(f"[Hierarchy Cluster] ...", end='\r')
     # Construct the path to the summarize.csv file
     cohort_dir = os.path.splitext(cohort_file)[0]
     summarize_file = os.path.join(cohort_dir, 'summarize.csv')
     
     # Check if the summarize.csv file exists
     if not os.path.exists(summarize_file):
-        print(f"[Clustering] Error: {summarize_file} not found")
+        print(f"\n[Hierarchy Cluster] Error: {summarize_file} not found")
         sys.exit(1)
     
     # Read the summarize.csv file
     df = pd.read_csv(summarize_file)
     
-    # Find the index of the start gene
-    start_gene_index = df.columns.get_loc(start_gene)
+    # Find the index of the START_GENE column
+    start_gene_index = df.columns.get_loc('START_GENE')
     
     # Extract features (gene expression data) and metadata
-    gene_data = df.iloc[:, start_gene_index:]
-    metadata = df.iloc[:, :start_gene_index]
+    gene_data = df.iloc[:, start_gene_index + 1:]  # +1 to start from the column after START_GENE
+    metadata = df.iloc[:, :start_gene_index + 1]  # Include START_GENE column in metadata
     
-    print("[Clustering] Selecting top variable genes...", flush=True)
     # Select top n_genes most variable genes based on original data
     gene_variances = gene_data.var()
     top_genes = gene_variances.nlargest(n_genes).index
     selected_gene_data = gene_data[top_genes]
+
+    # Calculate correlations for genes using Pearson correlation on original values
+    gene_dist = pdist(selected_gene_data.T, metric='correlation')
     
-    print("[Clustering] Calculating z-scores...", flush=True)
-    # Calculate z-scores for selected genes across all samples
-    z_scores = selected_gene_data.apply(lambda x: (x - x.mean()) / x.std(), axis=0)
+    # Calculate correlations for cases using Pearson correlation on original values
+    case_dist = pdist(selected_gene_data, metric='correlation')
     
-    # Handle outliers by clipping z-scores
-    z_scores_clipped = z_scores.clip(-4, 4)
-    
-    print("[Clustering] Performing hierarchical clustering on genes...", flush=True)
     # Perform hierarchical clustering on genes
-    gene_linkage = hierarchy.linkage(pdist(z_scores_clipped.T), method='average')
+    gene_linkage = hierarchy.linkage(gene_dist, method='ward')
     
-    print("[Clustering] Grouping and clustering samples...", flush=True)
-    # Group samples by the specified column
-    grouped = metadata.groupby(group_column)
+    # Perform hierarchical clustering on cases
+    case_linkage = hierarchy.linkage(case_dist, method='ward')
+    case_order = hierarchy.leaves_list(case_linkage)
+    gene_order = hierarchy.leaves_list(gene_linkage)
+    print("[Hierarchy Cluster] Complete")
     
-    # Calculate mean z-scores for each group
-    group_means = z_scores_clipped.groupby(metadata[group_column]).mean()
+    # Reorder the data according to the clustering
+    data_ordered = selected_gene_data.iloc[case_order, gene_order]
     
-    # Cluster groups based on their mean z-scores
-    group_linkage = hierarchy.linkage(pdist(group_means), method='average')
-    group_order = group_means.index[hierarchy.leaves_list(group_linkage)]
+    # Calculate z-scores for visualization
+    scaler = StandardScaler()
+    z_scores = pd.DataFrame(scaler.fit_transform(data_ordered), 
+                            columns=data_ordered.columns, 
+                            index=data_ordered.index)
     
-    # Cluster samples within each group
-    sample_order = []
-    for group in group_order:
-        group_data = z_scores_clipped.loc[grouped.groups[group]]
-        sample_linkage = hierarchy.linkage(pdist(group_data), method='average')
-        sample_order_within_group = hierarchy.leaves_list(sample_linkage)
-        sample_order.extend(group_data.index[sample_order_within_group])
-    
-    # Reorder the data according to the sample grouping and clustering
-    z_scores_ordered = z_scores_clipped.loc[sample_order]
-    
-    print("[Clustering] Generating heatmap...", flush=True)
     # Set up the matplotlib figure
-    fig = plt.figure(figsize=(16, 16))
+    print("[Create Heatmap] ...", end='\r')
+    fig = plt.figure(figsize=(13, 11.5))
     
     # Create a gridspec for the layout
-    gs = fig.add_gridspec(2, 3, width_ratios=[2, 15, 1], height_ratios=[1, 15],
-                          left=0.05, right=0.98, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
+    gs = fig.add_gridspec(3, 3, width_ratios=[1, 10, 1.5], height_ratios=[1, 0.1, 10],
+                          left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
     
-    # Dendrogram
-    ax_dendrogram = fig.add_subplot(gs[1, 0])
+    # Gene dendrogram
+    ax_gene_dendrogram = fig.add_subplot(gs[2, 0])
+    hierarchy.dendrogram(gene_linkage, orientation='left', ax=ax_gene_dendrogram, link_color_func=lambda k: 'black')
+    ax_gene_dendrogram.axis('off')
     
-    # Compress the dendrogram by adjusting the distance threshold
-    max_d = 0.7 * max(gene_linkage[:, 2])  # This sets the cut-off to 70% of the max distance
-    fancy_dendrogram(
-        gene_linkage,
-        truncate_mode='lastp',
-        p=10,  # Show only the last p merged clusters
-        leaf_rotation=0.,
-        leaf_font_size=12.,
-        show_contracted=True,
-        ax=ax_dendrogram,
-        max_d=max_d,
-        orientation='left'
-    )
-    ax_dendrogram.axis('off')
+    # Case dendrogram
+    ax_case_dendrogram = fig.add_subplot(gs[0, 1])
+    hierarchy.dendrogram(case_linkage, ax=ax_case_dendrogram, link_color_func=lambda k: 'black')
+    ax_case_dendrogram.axis('off')
     
     # Heatmap
-    ax_heatmap = fig.add_subplot(gs[1, 1])
-    sns.heatmap(z_scores_ordered.T, cmap='RdBu_r', center=0, vmin=-4, vmax=4,
+    ax_heatmap = fig.add_subplot(gs[2, 1])
+    vmin = np.percentile(z_scores.values, 1)
+    vmax = np.percentile(z_scores.values, 99)
+    sns.heatmap(z_scores.T, cmap='RdBu_r', center=0, vmin=vmin, vmax=vmax,
                 xticklabels=False, yticklabels=False, cbar=False, ax=ax_heatmap)
     
-    # Colorbar
-    ax_colorbar = fig.add_subplot(gs[1, 2])
-    norm = plt.Normalize(vmin=-4, vmax=4)
-    sm = plt.cm.ScalarMappable(cmap='RdBu_r', norm=norm)
-    sm.set_array([])
-    cbar = plt.colorbar(sm, cax=ax_colorbar, orientation='vertical', label='Z-score')
-    cbar.ax.set_ylabel('Z-score', fontsize=10, fontweight='bold', rotation=270, labelpad=15)
-    
-    # Group labels
-    ax_groups = fig.add_subplot(gs[0, 1], sharex=ax_heatmap)
+    # Group indicator
+    ax_groups = fig.add_subplot(gs[1, 1], sharex=ax_heatmap)
     ax_groups.set_ylim(0, 1)
-    group_sizes = grouped.size().loc[group_order]
-    start = 0
-    colors = plt.cm.Set2(np.linspace(0, 1, len(group_order)))
-    for i, (group, size) in enumerate(group_sizes.items()):
-        end = start + size
-        ax_groups.axvspan(start, end, facecolor=colors[i], alpha=0.5)
-        ax_groups.text((start + end) / 2, 0.5, group, ha='center', va='center', rotation=0,
-                       fontsize=10, fontweight='bold', color='black')
-        start = end
-    ax_groups.set_xlim(0, len(z_scores_ordered))
+    
+    # Get unique groups and assign colors
+    unique_groups = metadata[group_column].unique()
+    color_palette = sns.color_palette("Set1", n_colors=len(unique_groups))
+    color_map = dict(zip(unique_groups, color_palette))
+    
+    # Plot color bars for each sample's group
+    for i, sample in enumerate(data_ordered.index):
+        group = metadata.loc[sample, group_column]
+        ax_groups.axvspan(i, i+1, facecolor=color_map[group], alpha=0.8)
+    
+    ax_groups.set_xlim(0, len(data_ordered))
     ax_groups.axis('off')
     
-    # Main title
-    fig.suptitle(f'Gene Expression Clustering by {group_column}', fontsize=16, y=0.98, fontweight='bold')
+    # Legend and colorbar
+    ax_legend = fig.add_subplot(gs[2, 2])
+   
+    # Add legend for groups
+    legend_elements = [Rectangle((0, 0), 0.5, 0.5, facecolor=color_map[group], label=group) for group in unique_groups]
+    blank_elements = [Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(4)]
+   
+    cmap = plt.get_cmap('RdBu_r')
+    z_min = round(np.floor(vmin / 0.2))
+    z_max = round(np.ceil(vmax / 0.2))
+    z_values = list(range(z_max, z_min, -1))
+    cbar_elements = []
+    for z in z_values:
+        if z % 5 == 0:
+            label = f'{round(z*0.2)}'
+        else:
+            label = ''
+        cbar_elements.append(Rectangle((0, 0), 0.5, 0.5, facecolor=cmap(z*0.1/max(abs(vmax), abs(vmin))+0.5), label=label))
+    
+    all_elements = legend_elements + blank_elements + cbar_elements
+    legend = ax_legend.legend(handles=all_elements, loc='center', 
+                              ncol=1, handlelength=1, handleheight=1, 
+                              handletextpad=0.5, columnspacing=0.5, labelspacing=0)
+    legend.get_frame().set_linewidth(0.0)
+    ax_legend.axis('off')
     
     # Use a clean style
     plt.style.use('seaborn-v0_8-whitegrid')
     
     # Save the plot
-    output_file = os.path.join(cohort_dir, f'Dendrogram_Heatmap_{group_column.replace(" ", "_")}.pdf')
+    output_file = os.path.join(cohort_dir, f'clustering_{group_column.replace(" ", "_")}.pdf')
     plt.savefig(output_file, format='pdf', dpi=300, bbox_inches='tight')
     plt.close()
     
-    print(f"[Clustering] Complete for {group_column}", flush=True)
-
-def fancy_dendrogram(*args, **kwargs):
-    max_d = kwargs.pop('max_d', None)
-    if max_d and 'color_threshold' not in kwargs:
-        kwargs['color_threshold'] = max_d
-    annotate_above = kwargs.pop('annotate_above', 0)
-
-    ddata = hierarchy.dendrogram(*args, **kwargs)
-
-    if not kwargs.get('no_plot', False):
-        plt.title('Hierarchical Clustering Dendrogram (truncated)')
-        plt.xlabel('sample index or (cluster size)')
-        plt.ylabel('distance')
-        for i, d, c in zip(ddata['icoord'], ddata['dcoord'], ddata['color_list']):
-            x = 0.5 * sum(i[1:3])
-            y = d[1]
-            if y > annotate_above:
-                plt.plot(x, y, 'o', c=c)
-                plt.annotate("%.3g" % y, (x, y), xytext=(0, -5),
-                             textcoords='offset points',
-                             va='top', ha='center')
-        if max_d:
-            plt.axhline(y=max_d, c='k')
-    return ddata
+    print("[Create Heatmap] Complete")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python3 clustering.py <cohort_file> <group_column> <start_gene>")
+    if len(sys.argv) not in [3, 4]:
+        print("Usage: python3 clustering.py <cohort_file> <group_column> [n_genes]")
         sys.exit(1)
     
     cohort_file = sys.argv[1]
     group_column = sys.argv[2]
-    start_gene = sys.argv[3]
+    n_genes = 1000
+    if len(sys.argv) == 4:
+        n_genes = int(sys.argv[3])
     
-    generate_dendrogram_heatmap(cohort_file, group_column, start_gene)
+    generate_dendrogram_heatmap(cohort_file, group_column, n_genes)

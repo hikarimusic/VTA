@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 
-def process_profiles(cohort_file, profile_dir, value_type):
+def process_profiles(cohort_file, profile_dir, value_type, start_gene):
     output_dir = os.path.splitext(cohort_file)[0]
     os.makedirs(output_dir, exist_ok=True)
     output_file = os.path.join(output_dir, 'summarize.csv')
@@ -33,6 +33,10 @@ def process_profiles(cohort_file, profile_dir, value_type):
    
     result_df = pd.concat([cohort_df[cohort_df.iloc[:, 0].isin(gene_value_dict.keys())], gene_value_df], axis=1)
    
+    # Add START_GENE column
+    start_gene_index = result_df.columns.get_loc(start_gene)
+    result_df.insert(start_gene_index, 'START_GENE', "")
+   
     print("[Save Result] ...", end='\r')
     result_df.to_csv(output_file, index=False)
     print("[Save Result] Complete")
@@ -40,21 +44,21 @@ def process_profiles(cohort_file, profile_dir, value_type):
     return result_df
 
 if __name__ == "__main__":
-    if len(sys.argv) != 4:
-        print("Usage: python3 summarize.py <cohort_file> <profile_dir> <value_type>")
+    if len(sys.argv) != 5:
+        print("Usage: python3 summarize.py <cohort_file> <profile_dir> <start_gene> <value_type>")
         sys.exit(1)
-    
+   
     cohort_file = sys.argv[1]
     profile_dir = sys.argv[2]
-    value_type = sys.argv[3]
-    
+    start_gene = sys.argv[3]
+    value_type = sys.argv[4]
+   
     if not os.path.exists(cohort_file):
         print(f"Error: {cohort_file} not found")
         sys.exit(1)
-    
+   
     if not os.path.exists(profile_dir):
         print(f"Error: {profile_dir} not found")
         sys.exit(1)
-    
-    process_profiles(cohort_file, profile_dir, value_type)
-    # print("Summarization complete. Results saved in the 'cohort' directory.")
+   
+    process_profiles(cohort_file, profile_dir, value_type, start_gene)

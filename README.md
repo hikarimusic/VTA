@@ -36,15 +36,15 @@ Profile the mRNA expression:
 
 Summarize the profiles:
 ```sh
-python3 summarize.py <cohort_file> <profile_dir> <value_type>
+python3 summarize.py <cohort_file> <profile_dir> <start_gene> <value_type>
 ```
 
 Generate PCA plots:
 ```sh
-python3 pca_plot.py <cohort_file> <group_column> <start_gene>
+python3 pca_plot.py <cohort_file> <group_column>
 ```
 
 Perform clustering analysis:
 ```sh
-python3 clustering.py <cohort_file> <group_column> <start_gene>
+python3 clustering.py <cohort_file> <group_column> [n_genes]
 ```
