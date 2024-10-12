@@ -9,7 +9,7 @@ from matplotlib.patches import Rectangle
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
-def generate_dendrogram_heatmap(cohort_file, group_column, n_genes):
+def generate_dendrogram_heatmap(cohort_file, group_column):
     print(f"[Reading Data] ...", end='\r')
     # Construct the path to the summarize.csv file
     cohort_dir = os.path.splitext(cohort_file)[0]
@@ -32,13 +32,16 @@ def generate_dendrogram_heatmap(cohort_file, group_column, n_genes):
     print("[Reading Data] Complete")
 
     # Select top n_genes most variable genes based on original data
-    print(f"[Hierarchy Cluster] ...", end='\r')
-    gene_variances = gene_data.var()
-    gene_variances = gene_variances[gene_variances > 0]
-    top_genes = gene_variances.nlargest(n_genes).index
-    selected_gene_data = gene_data[top_genes]
+    print(f"[Filtering Genes] ...", end='\r')
+    expressed_genes = gene_data.columns[gene_data.mean() > 1]
+    filtered_gene_data = gene_data[expressed_genes]
+    gene_variances = filtered_gene_data.var()
+    high_var_genes = gene_variances[gene_variances > 0].index
+    selected_gene_data = filtered_gene_data[high_var_genes]
+    print(f"[Filtered Genes] {selected_gene_data.shape[1]}")
 
     # Calculate correlations for genes using Pearson correlation on original values
+    print(f"[Hierarchy Cluster] ...", end='\r')
     gene_dist = pdist(selected_gene_data.T, metric='correlation')
     
     # Calculate correlations for cases using Pearson correlation on original values
@@ -136,19 +139,18 @@ def generate_dendrogram_heatmap(cohort_file, group_column, n_genes):
     # Save the plot
     output_file = os.path.join(cohort_dir, f'clustering_{group_column.replace(" ", "_")}.pdf')
     plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+    output_file = os.path.join(cohort_dir, f'clustering_{group_column.replace(" ", "_")}.png')
+    plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
     
     print("[Create Heatmap] Complete")
 
 if __name__ == "__main__":
-    if len(sys.argv) not in [3, 4]:
-        print("Usage: python3 clustering.py <cohort_file> <group_column> [n_genes]")
+    if len(sys.argv) != 3:
+        print("Usage: python3 clustering.py <cohort_file> <group_column>")
         sys.exit(1)
     
     cohort_file = sys.argv[1]
     group_column = sys.argv[2]
-    n_genes = 1000000
-    if len(sys.argv) == 4:
-        n_genes = int(sys.argv[3])
     
-    generate_dendrogram_heatmap(cohort_file, group_column, n_genes)
+    generate_dendrogram_heatmap(cohort_file, group_column)

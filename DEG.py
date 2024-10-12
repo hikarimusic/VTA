@@ -28,6 +28,15 @@ def main(cohort_file, group_column, group1, group2):
     expression_data = df.iloc[:, start_gene_index + 1:]
     print("[Reading Data] Complete")
 
+    # Filter genes
+    print(f"[Filtering Genes] ...", end='\r')
+    expressed_genes = expression_data.columns[expression_data.mean() > 1]
+    expression_data = expression_data[expressed_genes]
+    gene_variances = expression_data.var()
+    high_var_genes = gene_variances[gene_variances > 0].index
+    expression_data = expression_data[high_var_genes]
+    print(f"[Filtered Genes] {expression_data.shape[1]}")
+
     # Perform differential expression analysis
     print(f"[Differential Expression] ...", end='\r')
     group1_data = expression_data[metadata[group_column].isin(group1)]
@@ -83,7 +92,7 @@ def main(cohort_file, group_column, group1, group2):
 
     # Generate volcano plot
     print(f"[Volcano Plot] ...", end='\r')
-    plt.figure(figsize=(12, 12))
+    plt.figure(figsize=(10, 10))
     plt.style.use('ggplot')
     
     log2_fc_threshold = 1
@@ -103,7 +112,9 @@ def main(cohort_file, group_column, group1, group2):
     plt.ylabel('-Log10 Adjusted P-value')
     
     volcano_file = os.path.join(output_dir, f'volcano_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
-    plt.savefig(volcano_file, format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(volcano_file, format='pdf', dpi=600, bbox_inches='tight')
+    volcano_file = os.path.join(output_dir, f'volcano_{"+".join(group1)}_vs_{"+".join(group2)}.png')
+    plt.savefig(volcano_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
     print("[Volcano Plot] Complete")
 
@@ -225,6 +236,8 @@ def main(cohort_file, group_column, group1, group2):
     # Save the plot
     heatmap_file = os.path.join(output_dir, f'heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
     plt.savefig(heatmap_file, format='pdf', dpi=600, bbox_inches='tight')
+    heatmap_file = os.path.join(output_dir, f'heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.png')
+    plt.savefig(heatmap_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
     
     print("[Generate Heatmap] Complete")
@@ -232,7 +245,7 @@ def main(cohort_file, group_column, group1, group2):
 
 if __name__ == "__main__":
     if len(sys.argv) < 6:
-        print("Usage: python3 DEG.py <cohort_file.csv> <group_column> <group1_class1> <group1_class2> ... -- <group2_class1> <group2_class2> ...")
+        print("Usage: python3 DEG.py <cohort_file.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...")
         sys.exit(1)
     
     cohort_file = sys.argv[1]

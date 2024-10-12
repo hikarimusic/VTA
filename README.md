@@ -17,17 +17,17 @@ pip install -r requirements.txt
 
 Index the reference genome:
 ```sh
-./index GRCh38.fna
+./index <GRCh38.fna>
 ```
 
 Align the sequences:
 ```sh
-./align GRCh38.fna input1.fq input2.fq output.sam
+./align <GRCh38.fna> <input1.fq> <input2.fq> <output.sam>
 ```
 
 Profile the mRNA expression:
 ```sh
-./profile gencode.gtf output.sam output.tsv
+./profile <gencode.gtf> <output.sam> <output.tsv>
 ```
 
 *(This library mainly focuses on the analysis of aligned data. If you found the index and align parts too slow, you can use other tools such as [bwa](https://github.com/lh3/bwa) for alignment.)*
@@ -46,10 +46,10 @@ python3 PCA.py <cohort_file.csv> <group_column>
 
 Perform clustering analysis:
 ```sh
-python3 clustering.py <cohort_file.csv> <group_column> [genes_number]
+python3 clustering.py <cohort_file.csv> <group_column>
 ```
 
 Analyze differentially expressed gene:
 ```sh
-python3 DEG.py <cohort_file.csv> <group_column> | <class 1> <class 2> ... | <class 3> <class 4> ...
+python3 DEG.py <cohort_file.csv> <group_column> <group1-a> <group1-b> ... -- <group2-a> <group2-b> ...
 ```
