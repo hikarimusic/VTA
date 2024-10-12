@@ -36,15 +36,20 @@ Profile the mRNA expression:
 
 Summarize the profiles:
 ```sh
-python3 summarize.py <cohort_file> <profile_dir> <start_gene> <value_type>
+python3 summarize.py <cohort_file.csv> <profile_dir/> <start_gene> <value_type>
 ```
 
 Generate PCA plots:
 ```sh
-python3 pca_plot.py <cohort_file> <group_column>
+python3 PCA.py <cohort_file.csv> <group_column>
 ```
 
 Perform clustering analysis:
 ```sh
-python3 clustering.py <cohort_file> <group_column> [n_genes]
+python3 clustering.py <cohort_file.csv> <group_column> [genes_number]
+```
+
+Analyze differentially expressed gene:
+```sh
+python3 DEG.py <cohort_file.csv> <group_column> | <class 1> <class 2> ... | <class 3> <class 4> ...
 ```

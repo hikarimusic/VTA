@@ -9,8 +9,7 @@ import matplotlib as mpl
 import seaborn as sns
 
 def generate_pca_plot(cohort_file, group_column):
-    print(f"[PCA plot] ...", end='', flush=True)
-   
+    print(f"[Reading Data] ...", end='\r')
     # Construct the path to the summarize.csv file
     cohort_dir = os.path.splitext(cohort_file)[0]
     summarize_file = os.path.join(cohort_dir, 'summarize.csv')
@@ -29,8 +28,10 @@ def generate_pca_plot(cohort_file, group_column):
     # Extract features (gene expression data) and labels
     features = df.iloc[:, start_gene_index + 1:]  # +1 to start from the column after START_GENE
     labels = df[group_column]
+    print("[Reading Data] Complete")
    
     # Normalize the features
+    print(f"[PCA plot] ...", end='', flush=True)
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features)
    
@@ -46,7 +47,7 @@ def generate_pca_plot(cohort_file, group_column):
     mpl.style.use('ggplot')
    
     # Create the plot
-    plt.figure(figsize=(12, 8))
+    plt.figure(figsize=(12, 12))
     sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=group_column, palette='deep', s=100)
    
     plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance explained)', fontsize=14)
@@ -55,7 +56,7 @@ def generate_pca_plot(cohort_file, group_column):
    
     # Save the plot in the same directory as summarize.csv
     output_file = os.path.join(cohort_dir, f'PCA_{group_column.replace(" ", "_")}.pdf')
-    plt.savefig(output_file, format='pdf', dpi=300, bbox_inches='tight')
+    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
     plt.close()
    
     print(f"\r[PCA plot] Complete                   ", flush=True)
