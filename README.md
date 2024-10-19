@@ -41,15 +41,15 @@ python3 summarize.py <cohort_file.csv> <profile_dir/> <start_gene> <value_type>
 
 Generate PCA plots:
 ```sh
-python3 PCA.py <cohort_file.csv> <group_column>
+python3 PCA.py <cohort_file.csv> <group_column1> <group_column2> ...
 ```
 
 Perform clustering analysis:
 ```sh
-python3 clustering.py <cohort_file.csv> <group_column>
+python3 clustering.py <cohort_file> <group_column1> <group_column2> ... <n_clusters>
 ```
 
 Analyze differentially expressed gene:
 ```sh
-python3 DEG.py <cohort_file.csv> <group_column> <group1-a> <group1-b> ... -- <group2-a> <group2-b> ...
+python3 DEG.py <cohort_file.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...
 ```

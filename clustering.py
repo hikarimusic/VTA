@@ -9,7 +9,7 @@ from matplotlib.patches import Rectangle
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 
-def generate_dendrogram_heatmap(cohort_file, group_column):
+def generate_dendrogram_heatmap(cohort_file, n_clusters, group_columns):
     print(f"[Reading Data] ...", end='\r')
     # Construct the path to the summarize.csv file
     cohort_dir = os.path.splitext(cohort_file)[0]
@@ -31,21 +31,23 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
     metadata = df.iloc[:, :start_gene_index + 1]  # Include START_GENE column in metadata
     print("[Reading Data] Complete")
 
-    # Select top n_genes most variable genes based on original data
+    # Filter and normalize gene
     print(f"[Filtering Genes] ...", end='\r')
     expressed_genes = gene_data.columns[gene_data.mean() > 1]
-    filtered_gene_data = gene_data[expressed_genes]
-    gene_variances = filtered_gene_data.var()
-    high_var_genes = gene_variances[gene_variances > 0].index
-    selected_gene_data = filtered_gene_data[high_var_genes]
-    print(f"[Filtered Genes] {selected_gene_data.shape[1]}")
+    gene_data = gene_data[expressed_genes]
+    high_var_genes = gene_data.columns[gene_data.var() > 0]
+    selected_gene_data = gene_data[high_var_genes]
+    target_median = selected_gene_data.median(axis=1).median(axis=0)  # Use the overall median as the target
+    scale_factors = target_median / selected_gene_data.median(axis=1)
+    normalized_gene_data = selected_gene_data.multiply(scale_factors, axis=0)
+    print(f"[Filtered Genes] {normalized_gene_data.shape[1]}")
 
     # Calculate correlations for genes using Pearson correlation on original values
     print(f"[Hierarchy Cluster] ...", end='\r')
-    gene_dist = pdist(selected_gene_data.T, metric='correlation')
+    gene_dist = pdist(normalized_gene_data.T, metric='correlation')
     
     # Calculate correlations for cases using Pearson correlation on original values
-    case_dist = pdist(selected_gene_data, metric='correlation')
+    case_dist = pdist(normalized_gene_data, metric='correlation')
     
     # Perform hierarchical clustering on genes
     gene_linkage = hierarchy.linkage(gene_dist, method='ward')
@@ -55,8 +57,11 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
     case_order = hierarchy.leaves_list(case_linkage)
     gene_order = hierarchy.leaves_list(gene_linkage)
     
+    # Perform cluster assignment
+    cluster_labels = hierarchy.fcluster(case_linkage, t=n_clusters, criterion='maxclust')
+    
     # Reorder the data according to the clustering
-    data_ordered = selected_gene_data.iloc[case_order, gene_order]
+    data_ordered = normalized_gene_data.iloc[case_order, gene_order]
     print("[Hierarchy Cluster] Complete")
     
     # Calculate z-scores for visualization
@@ -67,14 +72,16 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
                             index=data_ordered.index)
     
     # Set up the matplotlib figure
-    fig = plt.figure(figsize=(13, 11.5))
+    fig = plt.figure(figsize=(12.5, 11 + 0.1 * len(group_columns)))
     
     # Create a gridspec for the layout
-    gs = fig.add_gridspec(3, 3, width_ratios=[1, 10, 1.5], height_ratios=[1, 0.1, 10],
+    gs = fig.add_gridspec(2 + len(group_columns), 3, 
+                          width_ratios=[1, 10, 1.5], 
+                          height_ratios=[1] + [0.1] * len(group_columns) + [10],
                           left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
     
     # Gene dendrogram
-    ax_gene_dendrogram = fig.add_subplot(gs[2, 0])
+    ax_gene_dendrogram = fig.add_subplot(gs[1+len(group_columns), 0])
     hierarchy.dendrogram(gene_linkage, orientation='left', ax=ax_gene_dendrogram, link_color_func=lambda k: 'black')
     ax_gene_dendrogram.axis('off')
     
@@ -84,35 +91,42 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
     ax_case_dendrogram.axis('off')
     
     # Heatmap
-    ax_heatmap = fig.add_subplot(gs[2, 1])
+    ax_heatmap = fig.add_subplot(gs[1+len(group_columns), 1])
     vmin = np.percentile(z_scores.values, 1)
     vmax = np.percentile(z_scores.values, 99)
     sns.heatmap(z_scores.T, cmap='seismic', center=0, vmin=vmin, vmax=vmax,
                 xticklabels=False, yticklabels=False, cbar=False, ax=ax_heatmap)
     
-    # Group indicator
-    ax_groups = fig.add_subplot(gs[1, 1], sharex=ax_heatmap)
-    ax_groups.set_ylim(0, 1)
-    
-    # Get unique groups and assign colors
-    unique_groups = metadata[group_column].unique()
-    color_palette = sns.color_palette("tab10", n_colors=len(unique_groups))
-    color_map = dict(zip(unique_groups, color_palette))
-    
-    # Plot color bars for each sample's group
-    for i, sample in enumerate(data_ordered.index):
-        group = metadata.loc[sample, group_column]
-        ax_groups.axvspan(i, i+1, facecolor=color_map[group], alpha=1)
-    
-    ax_groups.set_xlim(0, len(data_ordered))
-    ax_groups.axis('off')
+    # Group indicators
+    color_preset = ["Set1", "tab10", "Dark2"]
+    for i, group_column in enumerate(group_columns):
+        ax_groups = fig.add_subplot(gs[1+i, 1], sharex=ax_heatmap)
+        ax_groups.set_ylim(0, 1)
+        
+        # Get unique groups and assign colors
+        unique_groups = metadata[group_column].unique()
+        color_palette = sns.color_palette(color_preset[i%3], n_colors=len(unique_groups))
+        color_map = dict(zip(unique_groups, color_palette))
+        
+        # Plot color bars for each sample's group
+        for j, sample in enumerate(data_ordered.index):
+            group = metadata.loc[sample, group_column]
+            ax_groups.axvspan(j, j+1, facecolor=color_map[group], alpha=1)
+        
+        ax_groups.set_xlim(0, len(data_ordered))
+        ax_groups.axis('off')
     
     # Legend and colorbar
-    ax_legend = fig.add_subplot(gs[2, 2])
+    ax_legend = fig.add_subplot(gs[1+len(group_columns), 2])
    
     # Add legend for groups
-    legend_elements = [Rectangle((0, 0), 0.5, 0.5, facecolor=color_map[group], label=group) for group in unique_groups]
-    blank_elements = [Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(4)]
+    legend_elements = []
+    for i, group_column in enumerate(group_columns):
+        unique_groups = metadata[group_column].unique()
+        color_palette = sns.color_palette(color_preset[i%3], n_colors=len(unique_groups))
+        color_map = dict(zip(unique_groups, color_palette))
+        legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor=color_map[group], label=group) for group in unique_groups])
+        legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(4)])
    
     cmap = plt.get_cmap('seismic')
     z_min = round(np.floor(vmin / 0.2))
@@ -126,7 +140,7 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
             label = ''
         cbar_elements.append(Rectangle((0, 0), 0.5, 0.5, facecolor=cmap(z*0.1/max(abs(vmax), abs(vmin))+0.5), label=label))
     
-    all_elements = legend_elements + blank_elements + cbar_elements
+    all_elements = legend_elements + cbar_elements
     legend = ax_legend.legend(handles=all_elements, loc='center', 
                               ncol=1, handlelength=1, handleheight=1, 
                               handletextpad=0.5, columnspacing=0.5, labelspacing=0.0)
@@ -137,20 +151,35 @@ def generate_dendrogram_heatmap(cohort_file, group_column):
     plt.style.use('seaborn-v0_8-whitegrid')
     
     # Save the plot
-    output_file = os.path.join(cohort_dir, f'clustering_{group_column.replace(" ", "_")}.pdf')
+    output_file = os.path.join(cohort_dir, f'clustering_{"_".join(group_columns).replace(" ", "_")}.pdf')
     plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
-    output_file = os.path.join(cohort_dir, f'clustering_{group_column.replace(" ", "_")}.png')
+    output_file = os.path.join(cohort_dir, f'clustering_{"_".join(group_columns).replace(" ", "_")}.png')
     plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
+    
+
+    # Output clustering.csv
+    cohort_df = pd.read_csv(cohort_file)
+    
+    # Reorder the cohort DataFrame according to the dendrogram
+    cohort_df_reordered = cohort_df.loc[data_ordered.index]
+    
+    # Add the cluster labels to the reordered DataFrame
+    cohort_df_reordered['cluster'] = [f"Cluster{label}" for label in cluster_labels[case_order]]
+    
+    # Save the reordered DataFrame with cluster labels to clustering.csv
+    clustering_output = os.path.join(cohort_dir, 'clustering.csv')
+    cohort_df_reordered.to_csv(clustering_output, index=False)
     
     print("[Create Heatmap] Complete")
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
-        print("Usage: python3 clustering.py <cohort_file> <group_column>")
+    if len(sys.argv) < 4:
+        print("Usage: python3 clustering.py <cohort_file> <group_column1> <group_column2> ... <n_clusters>")
         sys.exit(1)
     
     cohort_file = sys.argv[1]
-    group_column = sys.argv[2]
+    n_clusters = int(sys.argv[-1])  # The last argument is now n_clusters
+    group_columns = sys.argv[2:-1]  # All arguments between cohort_file and n_clusters are group columns
     
-    generate_dendrogram_heatmap(cohort_file, group_column)
+    generate_dendrogram_heatmap(cohort_file, n_clusters, group_columns)

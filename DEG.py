@@ -25,16 +25,18 @@ def main(cohort_file, group_column, group1, group2):
     start_gene_index = df.columns.get_loc('START_GENE')
     
     metadata = df.iloc[:, :start_gene_index + 1]
-    expression_data = df.iloc[:, start_gene_index + 1:]
+    gene_data = df.iloc[:, start_gene_index + 1:]
     print("[Reading Data] Complete")
 
-    # Filter genes
+    # Filter and normalize gene
     print(f"[Filtering Genes] ...", end='\r')
-    expressed_genes = expression_data.columns[expression_data.mean() > 1]
-    expression_data = expression_data[expressed_genes]
-    gene_variances = expression_data.var()
-    high_var_genes = gene_variances[gene_variances > 0].index
-    expression_data = expression_data[high_var_genes]
+    expressed_genes = gene_data.columns[gene_data.mean() > 1]
+    gene_data = gene_data[expressed_genes]
+    high_var_genes = gene_data.columns[gene_data.var() > 0]
+    selected_gene_data = gene_data[high_var_genes]
+    target_median = selected_gene_data.median(axis=1).median(axis=0)  # Use the overall median as the target
+    scale_factors = target_median / selected_gene_data.median(axis=1)
+    expression_data = selected_gene_data.multiply(scale_factors, axis=0)
     print(f"[Filtered Genes] {expression_data.shape[1]}")
 
     # Perform differential expression analysis
