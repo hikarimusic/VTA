@@ -6,7 +6,8 @@ import numpy as np
 def process_profiles(cohort_file, profile_dir, value_type, start_gene):
     output_dir = os.path.splitext(cohort_file)[0]
     os.makedirs(output_dir, exist_ok=True)
-    output_file = os.path.join(output_dir, 'summarize.csv')
+    output_file = os.path.join(output_dir, 'summary.csv')
+    output_file2 = os.path.join(output_dir, 'cohort.csv')
    
     cohort_df = pd.read_csv(cohort_file)
     sample_ids = cohort_df.iloc[:, 0].tolist()
@@ -39,13 +40,14 @@ def process_profiles(cohort_file, profile_dir, value_type, start_gene):
    
     print("[Save Result] ...", end='\r')
     result_df.to_csv(output_file, index=False)
+    cohort_df.to_csv(output_file2, index=False)
     print("[Save Result] Complete")
    
     return result_df
 
 if __name__ == "__main__":
     if len(sys.argv) != 5:
-        print("Usage: python3 summarize.py <cohort_file> <profile_dir> <start_gene> <value_type>")
+        print("Usage: python3 summarize.py <cohort.csv> <profile_dir/> <start_gene> <value_type>")
         sys.exit(1)
    
     cohort_file = sys.argv[1]

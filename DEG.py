@@ -11,19 +11,15 @@ from scipy.spatial.distance import pdist
 from sklearn.preprocessing import StandardScaler
 from matplotlib.patches import Rectangle
 
-def main(cohort_file, group_column, group1, group2):
+def main(summarize_file, group_column, group1, group2):
     # Read data
     print(f"[Reading Data] ...", end='\r')
-    cohort_dir = os.path.splitext(cohort_file)[0]
-    summarize_file = os.path.join(cohort_dir, 'summarize.csv')
-    
     if not os.path.exists(summarize_file):
         print(f"\n[Reading Data] Error: {summarize_file} not found")
         sys.exit(1)
     
     df = pd.read_csv(summarize_file)
     start_gene_index = df.columns.get_loc('START_GENE')
-    
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]
     print("[Reading Data] Complete")
@@ -34,12 +30,12 @@ def main(cohort_file, group_column, group1, group2):
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]
-    target_median = selected_gene_data.median(axis=1).median(axis=0)  # Use the overall median as the target
+    target_median = selected_gene_data.median(axis=1).median(axis=0)
     scale_factors = target_median / selected_gene_data.median(axis=1)
     expression_data = selected_gene_data.multiply(scale_factors, axis=0)
     print(f"[Filtered Genes] {expression_data.shape[1]}")
 
-    # Perform differential expression analysis
+    # Perform DEG analysis
     print(f"[Differential Expression] ...", end='\r')
     group1_data = expression_data[metadata[group_column].isin(group1)]
     group2_data = expression_data[metadata[group_column].isin(group2)]
@@ -57,10 +53,8 @@ def main(cohort_file, group_column, group1, group2):
             continue
         
         t_stat, p_value = stats.ttest_ind(group1_data[gene], group2_data[gene])
-        
         if np.isnan(p_value):
             continue
-        
         pvalues.append(p_value)
         genes.append(gene)
         
@@ -83,14 +77,19 @@ def main(cohort_file, group_column, group1, group2):
         'p_value': pvalues,
         'adjusted_pvalue': adjusted_pvalues,
     })
-    
-    results_df = results_df.sort_values('adjusted_pvalue')
+
+    # Count genes
+    log2_fc_threshold = 1
+    p_value_threshold = 0.01
+    down_regulated = sum((results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
+    up_regulated = sum((results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
 
     # Save results
-    output_dir = os.path.splitext(cohort_file)[0]
+    results_df = results_df.sort_values('adjusted_pvalue')
+    output_dir = os.path.dirname(summarize_file)
     results_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
     results_df.to_csv(results_file, index=False)
-    print("[Differential Expression] Complete")
+    print(f"[Differential Expression] Down: {down_regulated} / Up: {up_regulated}")
 
     # Generate volcano plot
     print(f"[Volcano Plot] ...", end='\r')
@@ -120,12 +119,11 @@ def main(cohort_file, group_column, group1, group2):
     plt.close()
     print("[Volcano Plot] Complete")
 
-   # Generate heatmap
+    # Generate heatmap
     print(f"[Generate Heatmap] ...", end='\r')
     filtered_metadata = metadata[metadata[group_column].isin(group1 + group2)]
     filtered_expression_data = expression_data.loc[filtered_metadata.index]
-    
-    # Select genes with adjusted p-value less than the threshold
+
     down_genes = results_df[(results_df['adjusted_pvalue'] < p_value_threshold) & (results_df['log2_fold_change'] < -log2_fc_threshold)]['gene']
     up_genes = results_df[(results_df['adjusted_pvalue'] < p_value_threshold) & (results_df['log2_fold_change'] > log2_fc_threshold)]['gene']
     
@@ -154,7 +152,7 @@ def main(cohort_file, group_column, group1, group2):
         else:
             group_order.extend(group_data.index)
 
-    # Reorder the data according to the clustering
+    # Reorder the data
     data_ordered = selected_gene_data.loc[group_order, gene_order]
     
     # Calculate z-scores for visualization
@@ -162,11 +160,8 @@ def main(cohort_file, group_column, group1, group2):
     z_scores = pd.DataFrame(scaler.fit_transform(data_ordered), 
                             columns=data_ordered.columns, 
                             index=data_ordered.index)
-    
-    # Set up the matplotlib figure
+
     fig = plt.figure(figsize=(11.3, 10.3))
-    
-    # Create a gridspec for the layout
     gs = fig.add_gridspec(2, 3, width_ratios=[0.3, 10, 1], height_ratios=[0.3, 10],
                           left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
     
@@ -181,11 +176,8 @@ def main(cohort_file, group_column, group1, group2):
     ax_groups = fig.add_subplot(gs[0, 1], sharex=ax_heatmap)
     ax_groups.set_ylim(0, 1)
     
-    # Assign colors to groups
     cmap = plt.get_cmap('seismic')
     color_map = {0: cmap(0.9), 1: cmap(0.1)}
-    
-    # Plot color rectangles for each group with group names (top)
     start = 0
     for i, group in enumerate([group1, group2]):
         group_samples = filtered_metadata[filtered_metadata[group_column].isin(group)]
@@ -211,8 +203,7 @@ def main(cohort_file, group_column, group1, group2):
     
     # Legend and colorbar
     ax_legend = fig.add_subplot(gs[1, 2])
-   
-    # Add colorbar
+
     cmap = plt.get_cmap('seismic')
     z_min = round(np.floor(vmin / 0.2))
     z_max = round(np.ceil(vmax / 0.2))
@@ -229,10 +220,9 @@ def main(cohort_file, group_column, group1, group2):
                               ncol=1, handlelength=1, handleheight=1, 
                               handletextpad=0.5, columnspacing=0.5, labelspacing=0.0)
     legend.get_frame().set_linewidth(0.0)
-    legend.get_frame().set_facecolor('none')  # Remove legend background color
+    legend.get_frame().set_facecolor('none')
     ax_legend.axis('off')
     
-    # Use a clean style
     plt.style.use('seaborn-v0_8-whitegrid')
     
     # Save the plot
@@ -241,16 +231,15 @@ def main(cohort_file, group_column, group1, group2):
     heatmap_file = os.path.join(output_dir, f'heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.png')
     plt.savefig(heatmap_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
-    
     print("[Generate Heatmap] Complete")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 6:
-        print("Usage: python3 DEG.py <cohort_file.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...")
+        print("Usage: python3 DEG.py <cohort/summarize.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...")
         sys.exit(1)
     
-    cohort_file = sys.argv[1]
+    summarize_file = sys.argv[1]
     group_column = sys.argv[2]
     
     try:
@@ -265,4 +254,4 @@ if __name__ == "__main__":
         print("Error: Both groups must contain at least one class")
         sys.exit(1)
     
-    main(cohort_file, group_column, group1, group2)
+    main(summarize_file, group_column, group1, group2)

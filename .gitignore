@@ -39,6 +39,7 @@
 *.fastq
 *.fna
 *.fq
+*.gmt
 *.gtf
 *.occ
 *.pdf
