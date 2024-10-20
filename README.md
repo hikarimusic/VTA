@@ -56,5 +56,5 @@ python3 DEG.py <cohort/summary.csv> <group_column> <group1a> <group1b> ... -- <g
 
 Perform gene set enrichment analysis:
 ```sh
-python3 GSEA.py <geneset.gmt> <cohort/DEG.csv>
+python3 GSEA.py <cohort/summary.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ... <geneset.gmt>
 ```

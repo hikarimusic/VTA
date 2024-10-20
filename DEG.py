@@ -80,7 +80,7 @@ def main(summarize_file, group_column, group1, group2):
 
     # Count genes
     log2_fc_threshold = 1
-    p_value_threshold = 0.01
+    p_value_threshold = 0.05
     down_regulated = sum((results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
     up_regulated = sum((results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
 
@@ -95,10 +95,7 @@ def main(summarize_file, group_column, group1, group2):
     print(f"[Volcano Plot] ...", end='\r')
     plt.figure(figsize=(10, 10))
     plt.style.use('ggplot')
-    
-    log2_fc_threshold = 1
-    p_value_threshold = 0.01
-    
+
     results_df['color'] = 'grey'
     results_df.loc[(results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold), 'color'] = 'red'
     results_df.loc[(results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold), 'color'] = 'blue'
