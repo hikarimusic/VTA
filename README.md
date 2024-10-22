@@ -51,7 +51,7 @@ python3 clustering.py <cohort/summary.csv> <group_column1> <group_column2> ... <
 
 Perform differentially expressed gene analysis:
 ```sh
-python3 DEG.py <cohort/summary.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...
+python3 DEG.py <cohort/summarize.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ... <geneset.gmt>
 ```
 
 Perform gene set enrichment analysis:
