@@ -11,7 +11,101 @@ from scipy.spatial.distance import pdist
 from sklearn.preprocessing import StandardScaler
 from matplotlib.patches import Rectangle
 
-def main(summarize_file, group_column, group1, group2):
+def find_optimal_threshold(results_df, background_genes, gene_sets, log2_fc_threshold=1, threshold = 1e-8):
+    """
+    Find the optimal p-value threshold that maximizes the number of enriched gene sets.
+    
+    Args:
+        results_df: DataFrame with DEG results
+        background_genes: Set of all tested genes
+        gene_sets: Dictionary of gene set names to gene sets
+        log2_fc_threshold: Log2 fold change threshold for DEG
+        
+    Returns:
+        optimal_threshold: Optimal p-value threshold (1e-n)
+        max_enriched_sets: Maximum number of enriched gene sets found
+    """
+    max_enriched_sets = 0
+    optimal_threshold = 1e-4  # default value
+    
+    # Test different p-value thresholds (1e-1 to 1e-10)
+    for n in range(1, 11):
+        test_threshold = 10**(-n)
+
+        if threshold is not None:
+            test_threshold = threshold
+        
+        # Define significant genes using current threshold
+        up_genes = set(results_df[(results_df['log2_fold_change'] > log2_fc_threshold) & 
+                                 (results_df['adjusted_p_value'] < test_threshold)]['gene'])
+        down_genes = set(results_df[(results_df['log2_fold_change'] < -log2_fc_threshold) & 
+                                  (results_df['adjusted_p_value'] < test_threshold)]['gene'])
+        
+        # Perform enrichment analysis
+        up_enrichment = perform_enrichment_analysis(up_genes, background_genes, gene_sets, "up")
+        down_enrichment = perform_enrichment_analysis(down_genes, background_genes, gene_sets, "down")
+        
+        # Count significantly enriched gene sets
+        significant_up = len(up_enrichment[up_enrichment['adjusted_p_value'] < 0.05]) if len(up_enrichment) > 0 else 0
+        significant_down = len(down_enrichment[down_enrichment['adjusted_p_value'] < 0.05]) if len(down_enrichment) > 0 else 0
+        total_significant = significant_up + significant_down
+        
+        # Update optimal threshold if we found more enriched sets
+        if total_significant > max_enriched_sets:
+            max_enriched_sets = total_significant
+            optimal_threshold = test_threshold
+    
+    return optimal_threshold, max_enriched_sets
+
+def perform_enrichment_analysis(deg_genes, background_genes, gene_sets, direction="up"):
+    """
+    Perform enrichment analysis using binomial test.
+    
+    Args:
+        deg_genes: Set of differentially expressed genes
+        background_genes: Set of all genes tested
+        gene_sets: Dictionary of gene set names to gene sets
+        direction: "up" or "down" to indicate which direction we're testing
+    """
+    results = []
+    
+    # Calculate the proportion of DEG genes in all background genes
+    total_deg_prop = len(deg_genes) / len(background_genes)
+    
+    for name, gene_set in gene_sets.items():
+        # Filter for genes that are in our background set
+        filtered_set = gene_set.intersection(background_genes)
+        if len(filtered_set) == 0:
+            continue
+            
+        # Count overlapping genes
+        overlapping_genes = filtered_set.intersection(deg_genes)
+        
+        # Perform binomial test
+        p_value = stats.binomtest(
+            len(overlapping_genes),
+            len(filtered_set),
+            total_deg_prop,
+            alternative='greater'
+        ).pvalue
+        
+        results.append({
+            'gene_set': name,
+            'total_genes_in_set': len(filtered_set),
+            'deg_genes_in_set': len(overlapping_genes),
+            'proportion': len(overlapping_genes) / len(filtered_set),
+            'p_value': p_value,
+        })
+    
+    # Convert to DataFrame and sort by p-value
+    results_df = pd.DataFrame(results)
+    if len(results_df) > 0:
+        results_df['adjusted_p_value'] = multipletests(results_df['p_value'], method='fdr_tsbh')[1]
+        results_df = results_df.sort_values('p_value')
+    
+    return results_df
+
+def main(summarize_file, group_column, group1, group2, gmt_file):
     # Read data
     print(f"[Reading Data] ...", end='\r')
     if not os.path.exists(summarize_file):
@@ -23,6 +117,17 @@ def main(summarize_file, group_column, group1, group2):
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]
     print("[Reading Data] Complete")
+
+    # Load GeneSets
+    print(f"[Loading GeneSets] ...", end='\r')
+    gene_sets = {}
+    with open(gmt_file, 'r') as f:
+        for line in f:
+            parts = line.strip().split('\t')
+            gene_set_name = parts[0]
+            genes = set(parts[2:])
+            gene_sets[gene_set_name] = genes
+    print(f"[Loading GeneSets] {len(gene_sets)}       ")   
 
     # Filter and normalize gene
     print(f"[Filtering Genes] ...", end='\r')
@@ -44,10 +149,7 @@ def main(summarize_file, group_column, group1, group2):
         print(f"Error: One or both groups have no samples. Skipping differential expression analysis.")
         return None
     
-    pvalues = []
-    log2_fold_changes = []
-    genes = []
-    
+    results = []
     for gene in expression_data.columns:
         if group1_data[gene].nunique() == 1 and group2_data[gene].nunique() == 1 and group1_data[gene].iloc[0] == group2_data[gene].iloc[0]:
             continue
@@ -55,41 +157,55 @@ def main(summarize_file, group_column, group1, group2):
         t_stat, p_value = stats.ttest_ind(group1_data[gene], group2_data[gene])
         if np.isnan(p_value):
             continue
-        pvalues.append(p_value)
-        genes.append(gene)
-        
+            
         mean1 = group1_data[gene].mean()
         mean2 = group2_data[gene].mean()
         if mean1 == 0 and mean2 == 0:
-            log2_fold_changes.append(0)
+            log2_fold_change = 0
         elif mean1 == 0:
-            log2_fold_changes.append(np.inf)
+            log2_fold_change = np.inf
         elif mean2 == 0:
-            log2_fold_changes.append(-np.inf)
+            log2_fold_change = -np.inf
         else:
-            log2_fold_changes.append(np.log2(mean2 / mean1))
+            log2_fold_change = np.log2(mean2 / mean1)
+            
+        results.append({
+            'gene': gene,
+            'log2_fold_change': log2_fold_change,
+            'p_value': p_value
+        })
     
-    _, adjusted_pvalues, _, _ = multipletests(pvalues, method='fdr_bh')
-    
-    results_df = pd.DataFrame({
-        'gene': genes,
-        'log2_fold_change': log2_fold_changes,
-        'p_value': pvalues,
-        'adjusted_pvalue': adjusted_pvalues,
-    })
+    results_df = pd.DataFrame(results)
+    results_df['adjusted_p_value'] = multipletests(results_df['p_value'], method='fdr_bh')[1]
+    background_genes = set(results_df['gene'])
 
-    # Count genes
+    # Find optimal p-value threshold
+    print("[Finding Optimal Threshold] ...")
     log2_fc_threshold = 1
-    p_value_threshold = 0.05
-    down_regulated = sum((results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
-    up_regulated = sum((results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
-
-    # Save results
-    results_df = results_df.sort_values('adjusted_pvalue')
+    p_value_threshold, num_enriched = find_optimal_threshold(results_df, background_genes, gene_sets, log2_fc_threshold)
+    print(f"[Optimal Threshold] p-value: {p_value_threshold:.1e}, enriched sets: {num_enriched}")
+    
+    # Define significant genes using optimal threshold
+    up_genes = set(results_df[(results_df['log2_fold_change'] > log2_fc_threshold) & 
+                             (results_df['adjusted_p_value'] < p_value_threshold)]['gene'])
+    down_genes = set(results_df[(results_df['log2_fold_change'] < -log2_fc_threshold) & 
+                               (results_df['adjusted_p_value'] < p_value_threshold)]['gene'])
+            
+    # Perform enrichment analysis
+    print("[Gene Set Enrichment Analysis] ...")
+    up_enrichment = perform_enrichment_analysis(up_genes, background_genes, gene_sets, "up")
+    down_enrichment = perform_enrichment_analysis(down_genes, background_genes, gene_sets, "down")
+    
+    # Save enrichment results
     output_dir = os.path.dirname(summarize_file)
-    results_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
-    results_df.to_csv(results_file, index=False)
-    print(f"[Differential Expression] Down: {down_regulated} / Up: {up_regulated}")
+    up_enrichment.to_csv(os.path.join(output_dir, f'enrichment_up_{"+".join(group1)}_vs_{"+".join(group2)}.csv'), index=False)
+    down_enrichment.to_csv(os.path.join(output_dir, f'enrichment_down_{"+".join(group1)}_vs_{"+".join(group2)}.csv'), index=False)
+    print("[Gene Set Enrichment Analysis] Complete")
+
+    # Save DEG results and create visualizations
+    results_df = results_df.sort_values('adjusted_p_value')
+    results_df.to_csv(os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}.csv'), index=False)
+    print(f"[Differential Expression] Down: {len(down_genes)} / Up: {len(up_genes)}")
 
     # Generate volcano plot
     print(f"[Volcano Plot] ...", end='\r')
@@ -97,10 +213,15 @@ def main(summarize_file, group_column, group1, group2):
     plt.style.use('ggplot')
 
     results_df['color'] = 'grey'
-    results_df.loc[(results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold), 'color'] = 'red'
-    results_df.loc[(results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold), 'color'] = 'blue'
+    results_df.loc[(results_df['log2_fold_change'] > log2_fc_threshold) & 
+                  (results_df['adjusted_p_value'] < p_value_threshold), 'color'] = 'red'
+    results_df.loc[(results_df['log2_fold_change'] < -log2_fc_threshold) & 
+                  (results_df['adjusted_p_value'] < p_value_threshold), 'color'] = 'blue'
     
-    plt.scatter(results_df['log2_fold_change'], -np.log10(results_df['adjusted_pvalue']), c=results_df['color'], alpha=0.5)
+    plt.scatter(results_df['log2_fold_change'], 
+               -np.log10(results_df['adjusted_p_value']), 
+               c=results_df['color'], 
+               alpha=0.5)
     
     plt.axvline(x=log2_fc_threshold, color='gray', linestyle='--')
     plt.axvline(x=-log2_fc_threshold, color='gray', linestyle='--')
@@ -116,21 +237,18 @@ def main(summarize_file, group_column, group1, group2):
     plt.close()
     print("[Volcano Plot] Complete")
 
-    # Generate heatmap
+    # Generate heatmap for DEG
     print(f"[Generate Heatmap] ...", end='\r')
     filtered_metadata = metadata[metadata[group_column].isin(group1 + group2)]
     filtered_expression_data = expression_data.loc[filtered_metadata.index]
-
-    down_genes = results_df[(results_df['adjusted_pvalue'] < p_value_threshold) & (results_df['log2_fold_change'] < -log2_fc_threshold)]['gene']
-    up_genes = results_df[(results_df['adjusted_pvalue'] < p_value_threshold) & (results_df['log2_fold_change'] > log2_fc_threshold)]['gene']
     
-    significant_genes = pd.concat([down_genes, up_genes])
-    selected_gene_data = filtered_expression_data[significant_genes]
+    significant_genes = up_genes.union(down_genes)
+    selected_gene_data = filtered_expression_data[list(significant_genes)]
     
     # Cluster genes
     gene_order = []
     for gene_group in [down_genes, up_genes]:
-        gene_data = selected_gene_data[gene_group]
+        gene_data = selected_gene_data[list(gene_group)]
         if len(gene_data.columns) > 1:
             gene_dist = pdist(gene_data.T, metric='correlation')
             gene_linkage = hierarchy.linkage(gene_dist, method='ward')
@@ -232,8 +350,8 @@ def main(summarize_file, group_column, group1, group2):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
-        print("Usage: python3 DEG.py <cohort/summarize.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ...")
+    if len(sys.argv) < 7:
+        print("Usage: python3 DEG.py <cohort/summarize.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ... <geneset.gmt>")
         sys.exit(1)
     
     summarize_file = sys.argv[1]
@@ -242,7 +360,8 @@ if __name__ == "__main__":
     try:
         separator_index = sys.argv.index('--')
         group1 = sys.argv[3:separator_index]
-        group2 = sys.argv[separator_index+1:]
+        group2 = sys.argv[separator_index+1:-1]
+        gmt_file = sys.argv[-1]
     except ValueError:
         print("Error: Missing '--' separator between groups")
         sys.exit(1)
@@ -251,4 +370,8 @@ if __name__ == "__main__":
         print("Error: Both groups must contain at least one class")
         sys.exit(1)
     
-    main(summarize_file, group_column, group1, group2)
+    if not os.path.exists(gmt_file):
+        print(f"Error: {gmt_file} not found")
+        sys.exit(1)
+    
+    main(sys.argv[1], sys.argv[2], group1, group2, gmt_file)
