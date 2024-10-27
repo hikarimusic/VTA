@@ -41,6 +41,7 @@
 *.fq
 *.gmt
 *.gtf
+*.keg
 *.occ
 *.pdf
 *.png

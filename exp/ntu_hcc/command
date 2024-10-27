@@ -1,0 +1,15 @@
+```
+python3 summarize.py hcc_cluster.csv hcc_dir DDX11L2 tpm
+```
+
+```
+python3 clustering.py hcc_cluster/summary.csv cluster etiology 3
+```
+
+```
+python3 DEG.py hcc_cluster/summary.csv cluster Cluster1 -- Cluster2 Hallmark.gmt
+```
+
+```
+python3 GSEA.py hcc_cluster/summary.csv cluster Cluster1 -- Cluster2 Cluster3 HALLMARK.gmt
+```

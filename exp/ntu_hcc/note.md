@@ -1,0 +1,1 @@
+KEGG: https://www.genome.jp/ftp/kegg/medicus/

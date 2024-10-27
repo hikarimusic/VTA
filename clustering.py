@@ -23,7 +23,7 @@ def generate_dendrogram_heatmap(summarize_file, n_clusters, group_columns):
 
     # Filter and normalize genes
     print(f"[Filtering Genes] ...", end='\r')
-    expressed_genes = gene_data.columns[gene_data.mean() > 0.1]
+    expressed_genes = gene_data.columns[gene_data.mean() > 1]
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]

@@ -11,7 +11,7 @@ from scipy.spatial.distance import pdist
 from sklearn.preprocessing import StandardScaler
 from matplotlib.patches import Rectangle
 
-def find_optimal_threshold(results_df, background_genes, gene_sets, log2_fc_threshold=1, threshold = 1e-8):
+def find_optimal_threshold(results_df, background_genes, gene_sets, log2_fc_threshold=1, threshold = None):
     """
     Find the optimal p-value threshold that maximizes the number of enriched gene sets.
     
@@ -220,7 +220,8 @@ def main(summarize_file, group_column, group1, group2, gmt_file):
     
     plt.scatter(results_df['log2_fold_change'], 
                -np.log10(results_df['adjusted_p_value']), 
-               c=results_df['color'], 
+               c=results_df['color'],
+               marker='.' ,
                alpha=0.5)
     
     plt.axvline(x=log2_fc_threshold, color='gray', linestyle='--')
