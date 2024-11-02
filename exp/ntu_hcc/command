@@ -7,7 +7,7 @@ python3 clustering.py hcc_cluster/summary.csv cluster etiology 3
 ```
 
 ```
-python3 DEG.py hcc_cluster/summary.csv cluster Cluster1 -- Cluster2 Hallmark.gmt
+python3 DEG.py hcc_cluster/summary.csv cluster Cluster1 -- Cluster2 Cluster3
 ```
 
 ```
