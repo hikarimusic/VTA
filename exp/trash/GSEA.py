@@ -13,7 +13,7 @@ def calculate_correlation(group1_data, group2_data):
 
     mean1 = group1_data.mean()
     mean2 = group2_data.mean()
-    log2_fold_change = np.log2((mean2 + 1e-9) / (mean1 + 1e-9))
+    log2_fold_change = np.log2((mean2 + 1e-8) / (mean1 + 1e-8))
     _, p_value = stats.ttest_ind(group1_data, group2_data)
     correlation = np.sign(log2_fold_change) * -np.log10(p_value)
 
@@ -72,9 +72,9 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
     plt.figure(figsize=(8, 8))
     
     x = np.arange(len(ranked_genes))
-    plt.plot(x, running_sum, color='red' if direction == 'up' else 'blue', linewidth=2)
+    plt.plot(x, running_sum, color='blue' if direction == 'up' else 'red', linewidth=2)
     plt.axhline(y=0, color='gray', linestyle='--', alpha=0.7)
-    plt.axvline(x=max_es_idx, color='red' if direction == 'up' else 'blue', linestyle='--', alpha=0.7)
+    plt.axvline(x=max_es_idx, color='blue' if direction == 'up' else 'red', linestyle='--', alpha=0.7)
     plt.axvline(x=zero_cross_idx, color='gray', linestyle='--', alpha=0.7)
     
     # Mark hits
@@ -125,7 +125,7 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
         p_values = [abs(correlations[gene]) for gene in selected_hits]
         plt.figure(figsize=(16, 8))
         bars = plt.bar(range(len(selected_hits)), p_values, 
-                      color='red' if direction == 'up' else 'blue', alpha=0.7)
+                      color='blue' if direction == 'up' else 'red', alpha=0.7)
         
         # Customize
         plt.xticks(range(len(selected_hits)), selected_hits, rotation=90)
@@ -163,7 +163,7 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
     start_gene_index = df.columns.get_loc('START_GENE')
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]
-    print("[Read Data] Complete                 ")
+    print("[Read Data] Complete    ")
 
     # Filter and normalize gene
     print(f"[Filter Genes] ...", end='\r')
@@ -174,7 +174,7 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
     target_median = selected_gene_data.median(axis=1).median(axis=0)
     scale_factors = target_median / selected_gene_data.median(axis=1)
     expression_data = selected_gene_data.multiply(scale_factors, axis=0)
-    print(f"[Filter Genes] {expression_data.shape[1]}                 ")
+    print(f"[Filter Genes] {expression_data.shape[1]}    ")
 
     # Load GeneSets
     print(f"[Load GeneSets] ...", end='\r')
@@ -185,7 +185,7 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
             gene_set_name = parts[0]
             genes = set(parts[2:])
             gene_sets[gene_set_name] = genes
-    print(f"[Load GeneSets] {len(gene_sets)}                 ")   
+    print(f"[Load GeneSets] {len(gene_sets)}       ")   
 
     # Perform GSEA with KS test
     print("[KS Test] ...", end='\r')
@@ -207,7 +207,7 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
         up_results.append((gene_set_name, es * direction, p_value))
         es, p_value, direction = calculate_ks_test(ranked_genes, gene_set, 'down')
         down_results.append((gene_set_name, es * direction, p_value))
-        print(f"[KS Test] {i}/{total_sets}                 ", end='\r')
+        print(f"[KS Test] {i}/{total_sets}    ", end='\r')
     
     # Adjust p-values
     _, up_adjusted_pvalues, _, _ = multipletests([r[2] for r in up_results], method='fdr_bh')
@@ -223,18 +223,17 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
 
     up_results_df = pd.DataFrame(up_final_results, columns=['gene_set', 'enrichment_score', 'p_value', 'p_adjust'])
     up_results_df = up_results_df.sort_values('p_value')
-    up_results_file = os.path.join(output_dir, f'GSEA_result_up_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}.csv')
+    up_results_file = os.path.join(output_dir, f'GSEA_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}_up.csv')
     up_results_df.to_csv(up_results_file, index=False)
 
     down_results_df = pd.DataFrame(down_final_results, columns=['gene_set', 'enrichment_score', 'p_value', 'adjusted_pvalue'])
     down_results_df = down_results_df.sort_values('p_value')
-    down_results_file = os.path.join(output_dir, f'GSEA_result_down_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}.csv')
+    down_results_file = os.path.join(output_dir, f'GSEA_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}_down.csv')
     down_results_df.to_csv(down_results_file, index=False)
-    print("[Save Results] Complete                 ")
+    print("[Save Results] Complete    ")
 
-    # Create plots
     print("[Create Plots] ...", end='\r')
-    plots_dir = os.path.join(output_dir, f'GSEA_plot_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}')
+    plots_dir = os.path.join(output_dir, f'GSEA_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}_plots')
     os.makedirs(plots_dir, exist_ok=True)
 
     significant_up = 0
@@ -251,11 +250,14 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
         significant_down += plot_gsea_bar(ranked_genes, gene_sets[gene_set_name], gene_set_name, p_adjust, 
                                                  correlations, plots_dir, direction='down')
     
-    print(f"[Create Plots] Up: {significant_up} / Down: {significant_down}                 ")
+    print(f"[Create Plots] Up: {significant_up} / Down: {significant_down}    ")
 
 
 if __name__ == "__main__":
-    '''Command: python3 GSEA.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>'''
+    if len(sys.argv) < 7:
+        print("Usage: python3 GSEA.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>")
+        sys.exit(1)
+    
     summarize_file = sys.argv[1]
     group_column = sys.argv[2]
     separator_index = sys.argv.index('--')

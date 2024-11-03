@@ -29,9 +29,9 @@ def generate_count_plot(metadata, group_column, group1, group2, output_dir):
                 plt.figure(figsize=(8, 8))
                 sns.countplot(data=filtered_metadata, x='Group', hue=col)
 
-                count_plot_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_count_{col}.pdf')
+                count_plot_file = os.path.join(output_dir, f'DEG_count_{"+".join(group1)}_vs_{"+".join(group2)}_{col}.pdf')
                 plt.savefig(count_plot_file, format='pdf', dpi=600, bbox_inches='tight')
-                count_plot_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_count_{col}.png')
+                count_plot_file = os.path.join(output_dir, f'DEG_count_{"+".join(group1)}_vs_{"+".join(group2)}_{col}.png')
                 plt.savefig(count_plot_file, format='png', dpi=600, bbox_inches='tight')
                 plt.close()
 
@@ -54,9 +54,9 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     plt.xlabel('Log2 Fold Change')
     plt.ylabel('-Log10 Adjusted P-value')
     
-    volcano_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_volcano.pdf')
+    volcano_file = os.path.join(output_dir, f'DEG_volcano_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
     plt.savefig(volcano_file, format='pdf', dpi=600, bbox_inches='tight')
-    volcano_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_volcano.png')
+    volcano_file = os.path.join(output_dir, f'DEG_volcano_{"+".join(group1)}_vs_{"+".join(group2)}.png')
     plt.savefig(volcano_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
 
@@ -107,9 +107,9 @@ def generate_strip_plot(results_df, expression_data, metadata, group_column, gro
         plt.ylabel('Gene')
         plt.legend(loc='upper right')
         
-        swarm_plot_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_strip_{title_prefix}.pdf')
+        swarm_plot_file = os.path.join(output_dir, f'DEG_strip_{title_prefix}_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
         plt.savefig(swarm_plot_file, format='pdf', dpi=600, bbox_inches='tight')
-        swarm_plot_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_strip_{title_prefix}.png')
+        swarm_plot_file = os.path.join(output_dir, f'DEG_strip_{title_prefix}_{"+".join(group1)}_vs_{"+".join(group2)}.png')
         plt.savefig(swarm_plot_file, format='png', dpi=600, bbox_inches='tight')
         plt.close()
 
@@ -217,9 +217,9 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
     ax_legend.axis('off')
     
     # Save the plot
-    heatmap_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_heatmap.pdf')
+    heatmap_file = os.path.join(output_dir, f'DEG_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
     plt.savefig(heatmap_file, format='pdf', dpi=600, bbox_inches='tight')
-    heatmap_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}_heatmap.png')
+    heatmap_file = os.path.join(output_dir, f'DEG_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.png')
     plt.savefig(heatmap_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
 
@@ -283,13 +283,13 @@ def DEG(summarize_file, group_column, group1, group2):
     results_df = results_df.sort_values('p_value')
 
     output_dir = os.path.dirname(summarize_file)
-    results_file = os.path.join(output_dir, f'DEG_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
+    results_file = os.path.join(output_dir, f'DEG_result_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
     results_df.to_csv(results_file, index=False)
     print(f"[Save Results] Complete                 ")
 
     print("[Create Plots] ...", end='\r')
     # Count plot
-    generate_count_plot(metadata, group_column, group1, group2, os.path.dirname(summarize_file))
+    generate_count_plot(metadata, group_column, group1, group2, output_dir)
     
     # Volcano plot
     generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_threshold, p_value_threshold)
@@ -304,10 +304,7 @@ def DEG(summarize_file, group_column, group1, group2):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 6:
-        print("Usage: python3 DEG.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... ")
-        sys.exit(1)
-    
+    '''Command: python3 DEG.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... '''
     summarize_file = sys.argv[1]
     group_column = sys.argv[2]
     separator_index = sys.argv.index('--')

@@ -1,5 +1,5 @@
 # VTA
-A Complete Library for NGS Data Analysis
+A Complete Library for Transcriptome Analysis
 
 ## Setup
 
@@ -39,22 +39,17 @@ Summarize the profiles:
 python3 summarize.py <cohort.csv> <profile_dir/> <start_gene> <value_type>
 ```
 
-Generate PCA plots:
-```sh
-python3 PCA.py <cohort/summary.csv> <group_column1> <group_column2> ...
-```
-
 Perform clustering analysis:
 ```sh
-python3 clustering.py <cohort/summary.csv> <group_column1> <group_column2> ... <n_clusters>
+python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... 
 ```
 
 Perform differentially expressed gene analysis:
 ```sh
-python3 DEG.py <cohort/summarize.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ... <geneset.gmt>
+python3 DEG.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
 ```
 
 Perform gene set enrichment analysis:
 ```sh
-python3 GSEA.py <cohort/summary.csv> <group_column> <group1a> <group1b> ... -- <group2a> <group2b> ... <geneset.gmt>
+python3 GSEA.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>
 ```

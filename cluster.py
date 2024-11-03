@@ -2,50 +2,93 @@ import sys
 import os
 import pandas as pd
 import numpy as np
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from scipy.cluster import hierarchy
 from scipy.spatial.distance import pdist
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 import seaborn as sns
-from sklearn.preprocessing import StandardScaler
 
-def generate_dendrogram_heatmap(summarize_file, n_clusters, group_columns):
-    print(f"[Reading Data] ...", end='\r')
-    if not os.path.exists(summarize_file):
-        print(f"\n[Hierarchy Cluster] Error: {summarize_file} not found")
-        sys.exit(1)
-    
+def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
+    print("[PCA] ...    ", end='\r')
+    # Normalize
+    scaler = StandardScaler()
+    scaled_features = scaler.fit_transform(gene_data)
+
+    # Perform PCA
+    pca = PCA(n_components=2)
+    pca_result = pca.fit_transform(scaled_features)
+    pca_df = pd.DataFrame(data=pca_result, columns=['PC1', 'PC2'])
+    labels = metadata[group_columns]
+    sample_ids = metadata.iloc[:, 0]
+    pca_df = pd.concat([pca_df, labels, sample_ids], axis=1)
+
+    # Create plots
+    plt.style.use('ggplot')
+    for group_column in group_columns:
+        plt.figure(figsize=(8, 8))
+        sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=group_column, palette='deep')
+       
+        plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)')
+        plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)')
+        plt.legend(title=group_column)
+       
+        output_file = os.path.join(output_dir, f'Cluster_PCA_{group_column.replace(" ", "_")}.pdf')
+        plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+        output_file = os.path.join(output_dir, f'Cluster_PCA_{group_column.replace(" ", "_")}.png')
+        plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
+
+        # Add sample ID labels
+        for idx, row in pca_df.iterrows():
+            plt.annotate(row[sample_ids.name], (row['PC1'], row['PC2']), xytext=(3, 3), textcoords='offset points', fontsize=5, alpha=0.7)
+
+        output_file = os.path.join(output_dir, f'Cluster_PCAs_{group_column.replace(" ", "_")}.pdf')
+        plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+        output_file = os.path.join(output_dir, f'Cluster_PCAs_{group_column.replace(" ", "_")}.png')
+        plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
+        plt.close()
+   
+    print(f"[PCA] Complete                 ")
+
+def cluster(summarize_file, group_columns):
+    # Read data
+    print(f"[Read Data] ...", end='\r')  
     df = pd.read_csv(summarize_file)
     start_gene_index = df.columns.get_loc('START_GENE')
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]
-    print("[Reading Data] Complete")
+    print("[Read Data] Complete                 ")
+
+    # PCA (before normalization)
+    generate_pca_plot(metadata, gene_data, group_columns, os.path.dirname(summarize_file))
 
     # Filter and normalize genes
-    print(f"[Filtering Genes] ...", end='\r')
+    print(f"[Filter Genes] ...", end='\r')
     expressed_genes = gene_data.columns[gene_data.mean() > 1]
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]
     target_median = selected_gene_data.median(axis=1).median(axis=0)
     scale_factors = target_median / selected_gene_data.median(axis=1)
-    normalized_gene_data = selected_gene_data.multiply(scale_factors, axis=0)
-    print(f"[Filtered Genes] {normalized_gene_data.shape[1]}")
+    expression_data = selected_gene_data.multiply(scale_factors, axis=0)
+    print(f"[Filter Genes] {expression_data.shape[1]}                 ")
 
     # Hierarchy clustering
     print(f"[Hierarchy Cluster] ...", end='\r')
-    gene_dist = pdist(normalized_gene_data.T, metric='correlation')
-    case_dist = pdist(normalized_gene_data, metric='correlation')
+    gene_dist = pdist(expression_data.T, metric='correlation')
+    case_dist = pdist(expression_data, metric='correlation')
     
     gene_linkage = hierarchy.linkage(gene_dist, method='ward')
     case_linkage = hierarchy.linkage(case_dist, method='ward')
     case_order = hierarchy.leaves_list(case_linkage)
     gene_order = hierarchy.leaves_list(gene_linkage)
+    data_ordered = expression_data.iloc[case_order, gene_order]
 
-    cluster_labels = hierarchy.fcluster(case_linkage, t=n_clusters, criterion='maxclust')
-    
-    data_ordered = normalized_gene_data.iloc[case_order, gene_order]
-    print("[Hierarchy Cluster] Complete")
+    cluster_labels = {}
+    for i in range(2, 11):
+        cluster_labels[i] = hierarchy.fcluster(case_linkage, t=i, criterion='maxclust')
+    print("[Hierarchy Cluster] Complete                 ")
     
     # Create heatmap
     print("[Create Heatmap] ...", end='\r')
@@ -54,6 +97,7 @@ def generate_dendrogram_heatmap(summarize_file, n_clusters, group_columns):
                             columns=data_ordered.columns, 
                             index=data_ordered.index)
     
+    plt.style.use('seaborn-v0_8-whitegrid')
     fig = plt.figure(figsize=(12.5, 11 + 0.1 * len(group_columns)))
     gs = fig.add_gridspec(2 + len(group_columns), 3, 
                           width_ratios=[1, 10, 1.5], 
@@ -123,34 +167,32 @@ def generate_dendrogram_heatmap(summarize_file, n_clusters, group_columns):
                               handletextpad=0.5, columnspacing=0.5, labelspacing=0.0)
     legend.get_frame().set_linewidth(0.0)
     ax_legend.axis('off')
-    
-    plt.style.use('seaborn-v0_8-whitegrid')
+    print("[Create Heatmap] Complete                 ")
     
     # Save the plot
+    print("[Save Heatmap] ...", end='\r')
     output_dir = os.path.dirname(summarize_file)
-    output_file = os.path.join(output_dir, f'clustering_{"_".join(group_columns).replace(" ", "_")}.pdf')
+    output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.pdf')
     plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
-    output_file = os.path.join(output_dir, f'clustering_{"_".join(group_columns).replace(" ", "_")}.png')
+    output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.png')
     plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
     
     # Output clustering.csv
     cohort_file = os.path.join(output_dir, 'cohort.csv')
     cohort_df = pd.read_csv(cohort_file)
-    cohort_df_reordered = cohort_df.loc[data_ordered.index]
-    cohort_df_reordered['cluster'] = [f"Cluster{label}" for label in cluster_labels[case_order]]
-
-    clustering_output = os.path.join(output_dir, 'clustering.csv')
-    cohort_df_reordered.to_csv(clustering_output, index=False)
-    print("[Create Heatmap] Complete")
+    cohort_df_ordered = cohort_df.loc[data_ordered.index]
+    ordered_output = os.path.join(output_dir, 'cohort_ordered.csv')
+    cohort_df_ordered.to_csv(ordered_output, index=False)
+    for i in range(2, 11):
+        cohort_df_ordered[f'{i}_clusters'] = [f"{i}_cluster{label}" for label in cluster_labels[i][case_order]]
+    clustered_output = os.path.join(output_dir, 'cohort_clustered.csv')
+    cohort_df_ordered.to_csv(clustered_output, index=False)
+    print("[Save Heatmap] Complete                 ")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
-        print("Usage: python3 clustering.py <cohort/summarize.csv> <group_column1> <group_column2> ... <n_clusters>")
-        sys.exit(1)
-    
+    '''Command: python3 cluster.py <cohort/summarize.csv> <group_column1> <group_column2> ... '''
     summarize_file = sys.argv[1]
-    n_clusters = int(sys.argv[-1])
-    group_columns = sys.argv[2:-1]
-    
-    generate_dendrogram_heatmap(summarize_file, n_clusters, group_columns)
+    group_columns = sys.argv[2:]
+
+    cluster(summarize_file, group_columns)
