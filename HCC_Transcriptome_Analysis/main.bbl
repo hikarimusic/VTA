@@ -1,0 +1,376 @@
+% $ biblatex auxiliary file $
+% $ biblatex bbl format version 3.1 $
+% Do not modify the above lines!
+%
+% This is an auxiliary file used by the 'biblatex' package.
+% This file may safely be deleted. It will be recreated by
+% biber as required.
+%
+\begingroup
+\makeatletter
+\@ifundefined{ver@biblatex.sty}
+  {\@latex@error
+     {Missing 'biblatex' package}
+     {The bibliography requires the 'biblatex' package.}
+      \aftergroup\endinput}
+  {}
+\endgroup
+
+
+\refsection{0}
+  \datalist[entry]{none/global//global/global}
+    \entry{hoshida2009integrative}{article}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{10}{}{%
+        {{hash=7afcf8906e9011303ad04de267529e2a}{%
+           family={Hoshida},
+           familyi={H\bibinitperiod},
+           given={Yujin},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=8da0b5c824c72ea482e30a9b8249d41c}{%
+           family={Nijman},
+           familyi={N\bibinitperiod},
+           given={Sebastian\bibnamedelima MB},
+           giveni={S\bibinitperiod\bibinitdelim M\bibinitperiod}}}%
+        {{hash=77aa65f4f90f80ed35714e22d5e10a05}{%
+           family={Kobayashi},
+           familyi={K\bibinitperiod},
+           given={Masahiro},
+           giveni={M\bibinitperiod}}}%
+        {{hash=79ae98fdd44165a95987a4f5ac684d0c}{%
+           family={Chan},
+           familyi={C\bibinitperiod},
+           given={Jennifer\bibnamedelima A},
+           giveni={J\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=7143fceed82947bc75159253ec6c6a8c}{%
+           family={Brunet},
+           familyi={B\bibinitperiod},
+           given={Jean-Philippe},
+           giveni={J\bibinithyphendelim P\bibinitperiod}}}%
+        {{hash=e9d9965741082065d3bbfbf30f58a856}{%
+           family={Chiang},
+           familyi={C\bibinitperiod},
+           given={Derek\bibnamedelima Y},
+           giveni={D\bibinitperiod\bibinitdelim Y\bibinitperiod}}}%
+        {{hash=d192ae99d32df7110e2ff68f83650a94}{%
+           family={Villanueva},
+           familyi={V\bibinitperiod},
+           given={Augusto},
+           giveni={A\bibinitperiod}}}%
+        {{hash=89c752e74f0084e4e98453c309b42784}{%
+           family={Newell},
+           familyi={N\bibinitperiod},
+           given={Philippa},
+           giveni={P\bibinitperiod}}}%
+        {{hash=ae8b8aa9aa33ddcfeb093a3f58a6bff4}{%
+           family={Ikeda},
+           familyi={I\bibinitperiod},
+           given={Kenji},
+           giveni={K\bibinitperiod}}}%
+        {{hash=11d73a73c11f470126c089f719b5f581}{%
+           family={Hashimoto},
+           familyi={H\bibinitperiod},
+           given={Masaji},
+           giveni={M\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {AACR}%
+      }
+      \strng{namehash}{ee224eb023afe70edf49d2faca6dd5d8}
+      \strng{fullhash}{2a6be5fc784188f1c91eb7d0c163b76e}
+      \strng{bibnamehash}{ee224eb023afe70edf49d2faca6dd5d8}
+      \strng{authorbibnamehash}{ee224eb023afe70edf49d2faca6dd5d8}
+      \strng{authornamehash}{ee224eb023afe70edf49d2faca6dd5d8}
+      \strng{authorfullhash}{2a6be5fc784188f1c91eb7d0c163b76e}
+      \field{sortinit}{1}
+      \field{sortinithash}{50c6687d7fc80f50136d75228e3c59ba}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Cancer research}
+      \field{number}{18}
+      \field{title}{Integrative transcriptome analysis reveals common molecular subclasses of human hepatocellular carcinoma}
+      \field{volume}{69}
+      \field{year}{2009}
+      \field{pages}{7385\bibrangedash 7392}
+      \range{pages}{8}
+    \endentry
+    \entry{totoki2014trans}{article}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{10}{}{%
+        {{hash=a0fcec5146a55e9898d7d928ccd195f7}{%
+           family={Totoki},
+           familyi={T\bibinitperiod},
+           given={Yasushi},
+           giveni={Y\bibinitperiod}}}%
+        {{hash=14d255c12be5f3b9c654137cc7de068f}{%
+           family={Tatsuno},
+           familyi={T\bibinitperiod},
+           given={Kenji},
+           giveni={K\bibinitperiod}}}%
+        {{hash=3b6fd66cbcccc9dff6ef31803fa3d335}{%
+           family={Covington},
+           familyi={C\bibinitperiod},
+           given={Kyle\bibnamedelima R},
+           giveni={K\bibinitperiod\bibinitdelim R\bibinitperiod}}}%
+        {{hash=389600ab22fb7a8a7bd3f804cb32d1a9}{%
+           family={Ueda},
+           familyi={U\bibinitperiod},
+           given={Hiroki},
+           giveni={H\bibinitperiod}}}%
+        {{hash=1e8f5684395a43ac868374c5043f05e9}{%
+           family={Creighton},
+           familyi={C\bibinitperiod},
+           given={Chad\bibnamedelima J},
+           giveni={C\bibinitperiod\bibinitdelim J\bibinitperiod}}}%
+        {{hash=09e1259aa8076d365ae0dea8db3bd475}{%
+           family={Kato},
+           familyi={K\bibinitperiod},
+           given={Mamoru},
+           giveni={M\bibinitperiod}}}%
+        {{hash=27ad4c9d95a0915831c4fc41e459f56d}{%
+           family={Tsuji},
+           familyi={T\bibinitperiod},
+           given={Shingo},
+           giveni={S\bibinitperiod}}}%
+        {{hash=a033ec811e70bd68787d08a0f4c6e09c}{%
+           family={Donehower},
+           familyi={D\bibinitperiod},
+           given={Lawrence\bibnamedelima A},
+           giveni={L\bibinitperiod\bibinitdelim A\bibinitperiod}}}%
+        {{hash=9bf962ced19858498ded0563e1492f1f}{%
+           family={Slagle},
+           familyi={S\bibinitperiod},
+           given={Betty\bibnamedelima L},
+           giveni={B\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=de69988ca3d87c9c51d0cc9b8d941b66}{%
+           family={Nakamura},
+           familyi={N\bibinitperiod},
+           given={Hiromi},
+           giveni={H\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Nature Publishing Group US New York}%
+      }
+      \strng{namehash}{5370818842373880bd604b08a43fede9}
+      \strng{fullhash}{b4cd0e707553d0bc947e96f73e13f068}
+      \strng{bibnamehash}{5370818842373880bd604b08a43fede9}
+      \strng{authorbibnamehash}{5370818842373880bd604b08a43fede9}
+      \strng{authornamehash}{5370818842373880bd604b08a43fede9}
+      \strng{authorfullhash}{b4cd0e707553d0bc947e96f73e13f068}
+      \field{sortinit}{2}
+      \field{sortinithash}{ed39bb39cf854d5250e95b1c1f94f4ed}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Nature genetics}
+      \field{number}{12}
+      \field{title}{Trans-ancestry mutational landscape of hepatocellular carcinoma genomes}
+      \field{volume}{46}
+      \field{year}{2014}
+      \field{pages}{1267\bibrangedash 1273}
+      \range{pages}{7}
+    \endentry
+    \entry{hsu2021exploring}{article}{}
+      \name{author}{9}{}{%
+        {{hash=efe7a4a86fbf013e0f4aa42daf70ba1a}{%
+           family={Hsu},
+           familyi={H\bibinitperiod},
+           given={Chia-Lang},
+           giveni={C\bibinithyphendelim L\bibinitperiod}}}%
+        {{hash=7cce70804b69497db48178172bde732d}{%
+           family={Ou},
+           familyi={O\bibinitperiod},
+           given={Da-Liang},
+           giveni={D\bibinithyphendelim L\bibinitperiod}}}%
+        {{hash=21390d956fd21dbe3d5f0e5d2d29ed57}{%
+           family={Bai},
+           familyi={B\bibinitperiod},
+           given={Li-Yuan},
+           giveni={L\bibinithyphendelim Y\bibinitperiod}}}%
+        {{hash=411796cbbfdf33331a91a03e6b2addbb}{%
+           family={Chen},
+           familyi={C\bibinitperiod},
+           given={Chia-Wei},
+           giveni={C\bibinithyphendelim W\bibinitperiod}}}%
+        {{hash=84e9edb45602671fc0899e2c5a23f482}{%
+           family={Lin},
+           familyi={L\bibinitperiod},
+           given={Li},
+           giveni={L\bibinitperiod}}}%
+        {{hash=c8e06deb04f4a0d03948e5c1ca700918}{%
+           family={Huang},
+           familyi={H\bibinitperiod},
+           given={Shiu-Feng},
+           giveni={S\bibinithyphendelim F\bibinitperiod}}}%
+        {{hash=aa808f9c70523bbd7278620f0565bcae}{%
+           family={Cheng},
+           familyi={C\bibinitperiod},
+           given={Ann-Lii},
+           giveni={A\bibinithyphendelim L\bibinitperiod}}}%
+        {{hash=69dfaf1a758c60f9ddb3de37b5f5b49c}{%
+           family={Jeng},
+           familyi={J\bibinitperiod},
+           given={Yung-Ming},
+           giveni={Y\bibinithyphendelim M\bibinitperiod}}}%
+        {{hash=375101cc7fe10c4411ce1b4c138aad64}{%
+           family={Hsu},
+           familyi={H\bibinitperiod},
+           given={Chiun},
+           giveni={C\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {S. Karger AG}%
+      }
+      \strng{namehash}{27b5eb035a2ef03706a09ce27c97f654}
+      \strng{fullhash}{5a5940780d55dfa87293501688e5091c}
+      \strng{bibnamehash}{27b5eb035a2ef03706a09ce27c97f654}
+      \strng{authorbibnamehash}{27b5eb035a2ef03706a09ce27c97f654}
+      \strng{authornamehash}{27b5eb035a2ef03706a09ce27c97f654}
+      \strng{authorfullhash}{5a5940780d55dfa87293501688e5091c}
+      \field{sortinit}{3}
+      \field{sortinithash}{a37a8ef248a93c322189792c34fc68c9}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Liver cancer}
+      \field{number}{4}
+      \field{title}{Exploring markers of exhausted CD8 T cells to predict response to immune checkpoint inhibitor therapy for hepatocellular carcinoma}
+      \field{volume}{10}
+      \field{year}{2021}
+      \field{pages}{346\bibrangedash 359}
+      \range{pages}{14}
+    \endentry
+    \entry{suppli2019hepatic}{article}{}
+      \true{moreauthor}
+      \true{morelabelname}
+      \name{author}{10}{}{%
+        {{hash=a2073f1ee05514ddd5c83fa620be8755}{%
+           family={Suppli},
+           familyi={S\bibinitperiod},
+           given={Malte\bibnamedelima P},
+           giveni={M\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=ebcf262c80ea52169d87c7c242e53034}{%
+           family={Rigbolt},
+           familyi={R\bibinitperiod},
+           given={Kristoffer\bibnamedelima TG},
+           giveni={K\bibinitperiod\bibinitdelim T\bibinitperiod}}}%
+        {{hash=315e284ea22ac41a540a51d82629ffba}{%
+           family={Veidal},
+           familyi={V\bibinitperiod},
+           given={Sanne\bibnamedelima S},
+           giveni={S\bibinitperiod\bibinitdelim S\bibinitperiod}}}%
+        {{hash=0065511332cb72aacdf7770899fe4b32}{%
+           family={Heeb{ø}ll},
+           familyi={H\bibinitperiod},
+           given={Sara},
+           giveni={S\bibinitperiod}}}%
+        {{hash=adc3858ec2f3e23f9af24fcd13d14731}{%
+           family={Eriksen},
+           familyi={E\bibinitperiod},
+           given={Peter\bibnamedelima Lykke},
+           giveni={P\bibinitperiod\bibinitdelim L\bibinitperiod}}}%
+        {{hash=f09945a791bf3dd22db925ea9b40c603}{%
+           family={Demant},
+           familyi={D\bibinitperiod},
+           given={Mia},
+           giveni={M\bibinitperiod}}}%
+        {{hash=06a50b925cac91efed1da94f60f6a520}{%
+           family={Bagger},
+           familyi={B\bibinitperiod},
+           given={Jonatan\bibnamedelima I},
+           giveni={J\bibinitperiod\bibinitdelim I\bibinitperiod}}}%
+        {{hash=3cf3f953e9bbe049dd0e176b2ebbc25d}{%
+           family={Nielsen},
+           familyi={N\bibinitperiod},
+           given={Jens\bibnamedelima Christian},
+           giveni={J\bibinitperiod\bibinitdelim C\bibinitperiod}}}%
+        {{hash=03251c471fe1f8d3fede66a45cb04ff9}{%
+           family={Or{ó}},
+           familyi={O\bibinitperiod},
+           given={Denise},
+           giveni={D\bibinitperiod}}}%
+        {{hash=487f862358f56327ea989d9a68e2b999}{%
+           family={Thrane},
+           familyi={T\bibinitperiod},
+           given={Sebastian\bibnamedelima W},
+           giveni={S\bibinitperiod\bibinitdelim W\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {American Physiological Society Bethesda, MD}%
+      }
+      \strng{namehash}{b0c2ff12c69d74516703cd54712ecbc6}
+      \strng{fullhash}{f6ba6c2adf8ce0ae46260686fa4d46f1}
+      \strng{bibnamehash}{b0c2ff12c69d74516703cd54712ecbc6}
+      \strng{authorbibnamehash}{b0c2ff12c69d74516703cd54712ecbc6}
+      \strng{authornamehash}{b0c2ff12c69d74516703cd54712ecbc6}
+      \strng{authorfullhash}{f6ba6c2adf8ce0ae46260686fa4d46f1}
+      \field{sortinit}{4}
+      \field{sortinithash}{e071e0bcb44634fab398d68ad04e69f4}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{American Journal of Physiology-Gastrointestinal and Liver Physiology}
+      \field{number}{4}
+      \field{title}{Hepatic transcriptome signatures in patients with varying degrees of nonalcoholic fatty liver disease compared with healthy normal-weight individuals}
+      \field{volume}{316}
+      \field{year}{2019}
+      \field{pages}{G462\bibrangedash G472}
+      \range{pages}{-1}
+    \endentry
+    \entry{liberzon2015molecular}{article}{}
+      \name{author}{6}{}{%
+        {{hash=f271de23f67e27e03eb51f662e07919c}{%
+           family={Liberzon},
+           familyi={L\bibinitperiod},
+           given={Arthur},
+           giveni={A\bibinitperiod}}}%
+        {{hash=fca6407b68f4798554d1cc4b82612c73}{%
+           family={Birger},
+           familyi={B\bibinitperiod},
+           given={Chet},
+           giveni={C\bibinitperiod}}}%
+        {{hash=6fbec2e0babaa3db2fc39a05db92c15e}{%
+           family={Thorvaldsd{ó}ttir},
+           familyi={T\bibinitperiod},
+           given={Helga},
+           giveni={H\bibinitperiod}}}%
+        {{hash=f3d09464348e7d197a181596cca4d9ce}{%
+           family={Ghandi},
+           familyi={G\bibinitperiod},
+           given={Mahmoud},
+           giveni={M\bibinitperiod}}}%
+        {{hash=ad6eff2cbb321087bf48b554104ac78c}{%
+           family={Mesirov},
+           familyi={M\bibinitperiod},
+           given={Jill\bibnamedelima P},
+           giveni={J\bibinitperiod\bibinitdelim P\bibinitperiod}}}%
+        {{hash=3533535ae15dfa7249db0c54f41fc515}{%
+           family={Tamayo},
+           familyi={T\bibinitperiod},
+           given={Pablo},
+           giveni={P\bibinitperiod}}}%
+      }
+      \list{publisher}{1}{%
+        {Elsevier}%
+      }
+      \strng{namehash}{d2400513f8eac61f23ae958d7c377ca0}
+      \strng{fullhash}{14292fe5117dbb300ce06c630693443d}
+      \strng{bibnamehash}{d2400513f8eac61f23ae958d7c377ca0}
+      \strng{authorbibnamehash}{d2400513f8eac61f23ae958d7c377ca0}
+      \strng{authornamehash}{d2400513f8eac61f23ae958d7c377ca0}
+      \strng{authorfullhash}{14292fe5117dbb300ce06c630693443d}
+      \field{sortinit}{5}
+      \field{sortinithash}{5dd416adbafacc8226114bc0202d5fdd}
+      \field{labelnamesource}{author}
+      \field{labeltitlesource}{title}
+      \field{journaltitle}{Cell systems}
+      \field{number}{6}
+      \field{title}{The molecular signatures database hallmark gene set collection}
+      \field{volume}{1}
+      \field{year}{2015}
+      \field{pages}{417\bibrangedash 425}
+      \range{pages}{9}
+    \endentry
+  \enddatalist
+\endrefsection
+\endinput
+

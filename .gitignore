@@ -32,6 +32,9 @@
 *.app
 
 # User Define
+*.aux
+*.bib
+*.bcf
 *.bwt
 *.chr
 *.csv
@@ -42,6 +45,7 @@
 *.gmt
 *.gtf
 *.keg
+*.log
 *.occ
 *.pdf
 *.png
@@ -49,8 +53,11 @@
 *.seq
 *.sfa
 *.soft
+*.sty
+*.tex
 *.tsv
 *.txt
+*.xml
 index
 align
 profile

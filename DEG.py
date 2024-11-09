@@ -12,7 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from matplotlib.patches import Rectangle
 
 def generate_count_plot(metadata, group_column, group1, group2, output_dir):
-    print("[Create Plots] Count plot    ", end='\r')
+    print("[Create Plots] Count plot                 ", end='\r')
     # Combined group
     filtered_metadata = metadata[metadata[group_column].isin(group1 + group2)].copy()
     filtered_metadata['Group'] = filtered_metadata[group_column].apply(
@@ -24,10 +24,26 @@ def generate_count_plot(metadata, group_column, group1, group2, output_dir):
         if col != group_column and col != 'Group':
             unique_values = filtered_metadata[col].nunique()
             if unique_values >=2 and unique_values <= 10:
+                # Chi-square test
+                contingency_table = pd.crosstab(filtered_metadata['Group'], filtered_metadata[col])
+                p_value = "None"
+                if (contingency_table > 0).all().all():  # Check if all entries are non-zero
+                    chi2, p_value = stats.chi2_contingency(contingency_table)[:2]
+                    if p_value < 0.001:
+                        p_value = f'{p_value:.2e}'
+                    else:
+                        p_value = f'{p_value:.3f}'
+
                 # Count plot
                 plt.style.use('ggplot')
-                plt.figure(figsize=(8, 8))
+                plt.figure(figsize=(2.3, 2.3))
                 sns.countplot(data=filtered_metadata, x='Group', hue=col)
+
+                plt.xticks(fontsize=5)
+                plt.yticks(fontsize=5)
+                plt.xlabel('Group', fontsize=5)
+                plt.ylabel('Count', fontsize=5)
+                plt.legend(fontsize=5)
 
                 count_plot_file = os.path.join(output_dir, f'DEG_count_{"+".join(group1)}_vs_{"+".join(group2)}_{col}.pdf')
                 plt.savefig(count_plot_file, format='pdf', dpi=600, bbox_inches='tight')
@@ -35,8 +51,10 @@ def generate_count_plot(metadata, group_column, group1, group2, output_dir):
                 plt.savefig(count_plot_file, format='png', dpi=600, bbox_inches='tight')
                 plt.close()
 
+                print(f"[Chi-square] Group / {col}: {p_value}    ")
+
 def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_threshold, p_value_threshold):
-    print("[Create Plots] Volcano plot    ", end='\r')
+    print("[Create Plots] Volcano plot                 ", end='\r')
     # Up and down genes
     results_df['color'] = 'grey'
     results_df.loc[(results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold), 'color'] = 'red'
@@ -44,15 +62,17 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
 
     # Volcano plot
     plt.style.use('ggplot')
-    plt.figure(figsize=(8, 8))
-    plt.scatter(results_df['log2_fold_change'], -np.log10(results_df['adjusted_pvalue']), c=results_df['color'], alpha=0.5)
+    plt.figure(figsize=(2.3, 2.3))
+    plt.scatter(results_df['log2_fold_change'], -np.log10(results_df['adjusted_pvalue']), c=results_df['color'], alpha=0.5, s=5)
     
     plt.axvline(x=log2_fc_threshold, color='gray', linestyle='--')
     plt.axvline(x=-log2_fc_threshold, color='gray', linestyle='--')
     plt.axhline(y=-np.log10(p_value_threshold), color='gray', linestyle='--')
     
-    plt.xlabel('Log2 Fold Change')
-    plt.ylabel('-Log10 Adjusted P-value')
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=5)
+    plt.xlabel('Log2 Fold Change', fontsize=5)
+    plt.ylabel('-Log10 Adjusted P-value', fontsize=5)
     
     volcano_file = os.path.join(output_dir, f'DEG_volcano_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
     plt.savefig(volcano_file, format='pdf', dpi=600, bbox_inches='tight')
@@ -61,7 +81,7 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     plt.close()
 
 def generate_strip_plot(results_df, expression_data, metadata, group_column, group1, group2, output_dir):
-    print("[Create Plots] Strip plot    ", end='\r')
+    print("[Create Plots] Strip plot                 ", end='\r')
     
     # Pre-process
     sig_genes = results_df[results_df['adjusted_pvalue'] < 0.05].copy()
@@ -99,13 +119,14 @@ def generate_strip_plot(results_df, expression_data, metadata, group_column, gro
             plot_data = pd.concat([plot_data, temp_df])
 
         plt.style.use('ggplot')
-        plt.figure(figsize=(12, 12))
-        sns.stripplot(data=plot_data, x='Z-score', y='Gene', hue='Group', palette=palette, alpha=0.5)
+        plt.figure(figsize=(3.5, 6))
+        sns.stripplot(data=plot_data, x='Z-score', y='Gene', hue='Group', palette=palette, alpha=0.5, s=3)
         
-        plt.axvline(x=0, color='gray', linestyle='--', alpha=0.5)
-        plt.xlabel('Expression Z-score')
-        plt.ylabel('Gene')
-        plt.legend(loc='upper right')
+        plt.xticks(fontsize=5)
+        plt.yticks(fontsize=5)
+        plt.xlabel('Expression Z-score', fontsize=5)
+        plt.ylabel('Gene', fontsize=5)
+        plt.legend(loc='upper right', fontsize=5)
         
         swarm_plot_file = os.path.join(output_dir, f'DEG_strip_{title_prefix}_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
         plt.savefig(swarm_plot_file, format='pdf', dpi=600, bbox_inches='tight')
@@ -114,7 +135,7 @@ def generate_strip_plot(results_df, expression_data, metadata, group_column, gro
         plt.close()
 
 def generate_heatmap(results_df, expression_data, metadata, group_column, group1, group2, output_dir, log2_fc_threshold, p_value_threshold):
-    print("[Create Plots] Heatmap        ", end='\r')
+    print("[Create Plots] Heatmap                 ", end='\r')
 
     # Pre-process
     filtered_metadata = metadata[metadata[group_column].isin(group1 + group2)]
@@ -156,8 +177,8 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
 
     # Start plotting
     plt.style.use('seaborn-v0_8-whitegrid')
-    fig = plt.figure(figsize=(11.3, 10.3))
-    gs = fig.add_gridspec(2, 3, width_ratios=[0.3, 10, 1], height_ratios=[0.3, 10],
+    fig = plt.figure(figsize=(11.4 * 0.2, 10.4 * 0.2))
+    gs = fig.add_gridspec(2, 3, width_ratios=[0.4, 10, 1], height_ratios=[0.4, 10],
                           left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
     
     # Heatmap
@@ -178,7 +199,7 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
         group_samples = filtered_metadata[filtered_metadata[group_column].isin(group)]
         width = len(group_samples)
         ax_groups.add_patch(Rectangle((start, 0), width, 1, facecolor=color_map[i], edgecolor='none'))
-        ax_groups.text(start + width/2, 0.5, "+".join(group), ha='center', va='center', color='white', fontweight='semibold')
+        ax_groups.text(start + width/2, 0.5, "+".join(group), ha='center', va='center', color='white', fontsize=4, fontweight='semibold')
         start += width
     ax_groups.set_xlim(0, len(data_ordered))
     ax_groups.axis('off')
@@ -190,8 +211,8 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
     up_height = len(up_genes)
     ax_regulation.add_patch(Rectangle((0, 0), 1, down_height, facecolor=color_map[0], edgecolor='none'))
     ax_regulation.add_patch(Rectangle((0, down_height), 1, up_height, facecolor=color_map[1], edgecolor='none'))
-    ax_regulation.text(0.5, down_height/2, 'Down', ha='center', va='center', color='white', fontweight='semibold', rotation=90)
-    ax_regulation.text(0.5, down_height + up_height/2, 'Up', ha='center', va='center', color='white', fontweight='semibold', rotation=90)
+    ax_regulation.text(0.5, down_height/2, 'Down', ha='center', va='center', color='white', fontsize=4, fontweight='semibold', rotation=90)
+    ax_regulation.text(0.5, down_height + up_height/2, 'Up', ha='center', va='center', color='white', fontsize=4, fontweight='semibold', rotation=90)
     ax_regulation.set_ylim(down_height + up_height, 0)
     ax_regulation.axis('off')
     
@@ -211,14 +232,15 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
     
     legend = ax_legend.legend(handles=cbar_elements, loc='center', 
                               ncol=1, handlelength=1, handleheight=1, 
-                              handletextpad=0.5, columnspacing=0.5, labelspacing=0.0)
+                              handletextpad=0.5, columnspacing=0.5, labelspacing=0.0,
+                              prop={'size': 4})
     legend.get_frame().set_linewidth(0.0)
     legend.get_frame().set_facecolor('none')
     ax_legend.axis('off')
     
     # Save the plot
-    heatmap_file = os.path.join(output_dir, f'DEG_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
-    plt.savefig(heatmap_file, format='pdf', dpi=600, bbox_inches='tight')
+    # heatmap_file = os.path.join(output_dir, f'DEG_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.pdf')
+    # plt.savefig(heatmap_file, format='pdf', dpi=600, bbox_inches='tight')
     heatmap_file = os.path.join(output_dir, f'DEG_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.png')
     plt.savefig(heatmap_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()

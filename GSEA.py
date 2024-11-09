@@ -69,23 +69,25 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
 
     # Create GSEA plot
     plt.style.use('ggplot')
-    plt.figure(figsize=(8, 8))
+    plt.figure(figsize=(3, 3))
     
     x = np.arange(len(ranked_genes))
-    plt.plot(x, running_sum, color='red' if direction == 'up' else 'blue', linewidth=2)
-    plt.axhline(y=0, color='gray', linestyle='--', alpha=0.7)
-    plt.axvline(x=max_es_idx, color='red' if direction == 'up' else 'blue', linestyle='--', alpha=0.7)
-    plt.axvline(x=zero_cross_idx, color='gray', linestyle='--', alpha=0.7)
+    plt.plot(x, running_sum, color='red' if direction == 'up' else 'blue', linewidth=1)
+    plt.axhline(y=0, color='gray', linestyle='--', alpha=0.7, linewidth=1)
+    plt.axvline(x=max_es_idx, color='red' if direction == 'up' else 'blue', linestyle='--', alpha=0.7, linewidth=1)
+    plt.axvline(x=zero_cross_idx, color='gray', linestyle='--', alpha=0.7, linewidth=1)
     
     # Mark hits
     v_max = np.max(running_sum)
     v_min = np.min(running_sum)
     v_hit = (v_max - v_min) * (1 if np.abs(v_max) > np.abs(v_min) else -1) / 20
-    plt.vlines(hit_indices, 0, v_hit, color='black', alpha=0.2)
+    plt.vlines(hit_indices, 0, v_hit, color='black', alpha=0.2, linewidth=1)
     
     # Customize
-    plt.ylabel('Enrichment Score', fontsize=12)
-    plt.xlabel('Rank of Genes', fontsize=12)
+    plt.xticks(fontsize=5)
+    plt.yticks(fontsize=5)
+    plt.ylabel('Enrichment Score', fontsize=5)
+    plt.xlabel('Rank of Genes', fontsize=5)
     plt.xlim(0, len(ranked_genes))
     plt.ylim(np.min(running_sum) - 0.02, np.max(running_sum) + 0.02)
     
@@ -102,7 +104,7 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
     legend = plt.legend(handles=legend_elements, 
                         loc='upper right' if direction == 'up' else 'lower left',
                         frameon=False,
-                        fontsize=12,
+                        fontsize=5,
                         handlelength=0)
 
     # Save GSEA plot
@@ -123,14 +125,15 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
     
     if selected_hits:
         p_values = [abs(correlations[gene]) for gene in selected_hits]
-        plt.figure(figsize=(16, 8))
+        plt.figure(figsize=(9, 3))
         bars = plt.bar(range(len(selected_hits)), p_values, 
                       color='red' if direction == 'up' else 'blue', alpha=0.7)
         
         # Customize
-        plt.xticks(range(len(selected_hits)), selected_hits, rotation=90)
-        plt.ylabel('-log10 p-value', fontsize=12)
-        plt.xlabel('Leading Genes', fontsize=12)
+        plt.xticks(range(len(selected_hits)), selected_hits, rotation=90, fontsize=5)
+        plt.yticks(fontsize=5)
+        plt.ylabel('-log10 p-value', fontsize=5)
+        plt.xlabel('Leading Genes', fontsize=5)
         plt.xlim(-1, len(selected_hits))
 
         # Text box
@@ -143,7 +146,7 @@ def plot_gsea_bar(ranked_genes, gene_set, gene_set_name, p_adjust, correlations,
         legend = plt.legend(handles=legend_elements, 
                             loc='upper right',
                             frameon=False,
-                            fontsize=12,
+                            fontsize=5,
                             handlelength=0)
         
         # Save bar plot

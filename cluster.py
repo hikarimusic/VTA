@@ -27,12 +27,14 @@ def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
     # Create plots
     plt.style.use('ggplot')
     for group_column in group_columns:
-        plt.figure(figsize=(8, 8))
-        sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=group_column, palette='deep')
+        plt.figure(figsize=(2.8, 2.8))
+        sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue=group_column, palette='deep', s=10)
        
-        plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)')
-        plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)')
-        plt.legend(title=group_column)
+        plt.xlabel(f'PC1 ({pca.explained_variance_ratio_[0]:.2%} variance)', fontsize=6)
+        plt.ylabel(f'PC2 ({pca.explained_variance_ratio_[1]:.2%} variance)', fontsize=6)
+        plt.xticks(fontsize=6)
+        plt.yticks(fontsize=6)
+        plt.legend(title=group_column, title_fontsize=5, fontsize=5)
        
         output_file = os.path.join(output_dir, f'Cluster_PCA_{group_column.replace(" ", "_")}.pdf')
         plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
@@ -98,7 +100,7 @@ def cluster(summarize_file, group_columns):
                             index=data_ordered.index)
     
     plt.style.use('seaborn-v0_8-whitegrid')
-    fig = plt.figure(figsize=(12.5, 11 + 0.1 * len(group_columns)))
+    fig = plt.figure(figsize=((12.5) * 0.45, (11 + 0.1 * len(group_columns)) * 0.45))
     gs = fig.add_gridspec(2 + len(group_columns), 3, 
                           width_ratios=[1, 10, 1.5], 
                           height_ratios=[1] + [0.1] * len(group_columns) + [10],
@@ -146,9 +148,10 @@ def cluster(summarize_file, group_columns):
         unique_groups = metadata[group_column].unique()
         color_palette = sns.color_palette(color_preset[i%3], n_colors=len(unique_groups))
         color_map = dict(zip(unique_groups, color_palette))
+        legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label=group_column)])
         legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor=color_map[group], label=group) for group in unique_groups])
         legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(4)])
-   
+
     cmap = plt.get_cmap('seismic')
     z_min = round(np.floor(vmin / 0.2))
     z_max = round(np.ceil(vmax / 0.2))
@@ -164,7 +167,12 @@ def cluster(summarize_file, group_columns):
     all_elements = legend_elements + cbar_elements
     legend = ax_legend.legend(handles=all_elements, loc='center', 
                               ncol=1, handlelength=1, handleheight=1, 
-                              handletextpad=0.5, columnspacing=0.5, labelspacing=0.0)
+                              handletextpad=0.5, columnspacing=0.5, labelspacing=0.0,
+                              prop={'size': 5})
+
+    for text in legend.get_texts():
+        if text.get_text() in group_columns:
+            text.set_weight('bold')
     legend.get_frame().set_linewidth(0.0)
     ax_legend.axis('off')
     print("[Create Heatmap] Complete                 ")
@@ -172,8 +180,8 @@ def cluster(summarize_file, group_columns):
     # Save the plot
     print("[Save Heatmap] ...", end='\r')
     output_dir = os.path.dirname(summarize_file)
-    output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.pdf')
-    plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
+    # output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.pdf')
+    # plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
     output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.png')
     plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
