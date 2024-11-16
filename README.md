@@ -30,7 +30,20 @@ Profile the mRNA expression:
 ./profile <gencode.gtf> <output.sam> <output.tsv>
 ```
 
-*(This library mainly focuses on the analysis of aligned data. If you found the index and align parts too slow, you can use other tools such as [bwa](https://github.com/lh3/bwa) for alignment.)*
+---
+If you want to use STAR to process the data:
+```sh
+chmod +x setup_STAR.sh process_STAR.sh
+```
+Download and index genome files:
+```sh
+./setup_STAR.sh
+```
+Align and profile RNA-seq data:
+```sh
+./process_STAR.sh <input_dir/> <output_dir/>
+```
+
 
 ## Expression Analysis
 

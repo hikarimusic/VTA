@@ -6,7 +6,9 @@ import numpy as np
 def summarize(cohort_file, profile_dir, value_type, start_gene):
     # Process TSV
     print(f"[Process TSV] ...    ", end='\r')
-    cohort_df = pd.read_csv(cohort_file)
+    file_extension = os.path.splitext(cohort_file)[1].lower()
+    separator = '\t' if file_extension == '.tsv' else ','
+    cohort_df = pd.read_csv(cohort_file,sep=separator)
     sample_ids = cohort_df.iloc[:, 0].tolist()
    
     gene_value_dict = {}
@@ -18,7 +20,8 @@ def summarize(cohort_file, profile_dir, value_type, start_gene):
             continue
        
         print(f"[Process TSV] {i}/{len(sample_ids)}                 ", end='\r')
-        df = pd.read_csv(tsv_file, sep='\t')
+        df = pd.read_csv(tsv_file, sep='\t', comment='#')
+        df = df[~df['gene_id'].str.startswith('N_')]
         gene_value_dict[sample_id] = dict(zip(df['gene_name'], df[value_type]))
         if not gene_order:
             gene_order = df['gene_name'].tolist()
@@ -34,7 +37,9 @@ def summarize(cohort_file, profile_dir, value_type, start_gene):
     output_file2 = os.path.join(output_dir, 'cohort.csv')
    
     # Add START_GENE column
-    result_df = pd.concat([cohort_df[cohort_df.iloc[:, 0].isin(gene_value_dict.keys())], gene_value_df], axis=1)
+    cohort_df = cohort_df[cohort_df.iloc[:, 0].isin(gene_value_dict.keys())]
+    cohort_df = cohort_df.reset_index(drop=True)
+    result_df = pd.concat([cohort_df, gene_value_df], axis=1)
     start_gene_index = result_df.columns.get_loc(start_gene)
     result_df.insert(start_gene_index, 'START_GENE', "")
    

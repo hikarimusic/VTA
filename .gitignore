@@ -64,6 +64,8 @@ index
 align
 profile
 variant
+STAR
+STAR_index/
 tools
 exp/validate/problem
 exp/validate/judge
