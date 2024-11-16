@@ -132,11 +132,10 @@ THREADS=16
 
 mkdir -p "${OUTPUT_DIR}"
 
-# Process FASTQ files
-process_fastq_pair() {
+# Run STAR and process output
+process_reads() {
     local base_id="$1"
-    local fastq1="$2"
-    local fastq2="$3"
+    local reads="$2"
     local output_prefix="${OUTPUT_DIR}/${base_id}"
     
     echo "[Mapping] ${base_id}"
@@ -144,7 +143,7 @@ process_fastq_pair() {
     # Run STAR alignment
     ./STAR --runThreadN ${THREADS} \
            --genomeDir "${WORK_DIR}/STAR_index" \
-           --readFilesIn "${fastq1}" "${fastq2}" \
+           --readFilesIn ${reads} \
            --outFileNamePrefix "${output_prefix}." \
            --quantMode GeneCounts
     
@@ -155,23 +154,32 @@ process_fastq_pair() {
             "${WORK_DIR}/gencode.v36.annotation.gtf" \
             "${output_prefix}.tsv"
 
+    # Clean up intermediate files
     for file in "${output_prefix}."*; do
         if [ "${file}" != "${output_prefix}.tsv" ]; then
             rm -f "${file}"
         fi
     done
-
 }
 
-# Find all samples
-find "${INPUT_DIR}" -name "*.fastq" | sed 's/_[12]\.fastq$//' | sort | uniq | while read -r base_path; do
+# Process FASTQ files
+find "${INPUT_DIR}" -name "*.fastq" | while read -r fastq; do
+    base_path="${fastq%_[12].fastq}"
     base_id=$(basename "${base_path}")
-    fastq1="${base_path}_1.fastq"
-    fastq2="${base_path}_2.fastq"
     
-    if [ -f "${fastq1}" ] && [ -f "${fastq2}" ]; then
-        process_fastq_pair "${base_id}" "${fastq1}" "${fastq2}"
-    else
-        echo "[Warning] Incomplete pair for ${base_id}"
+    # paired-end
+    if [[ "${fastq}" =~ _1\.fastq$ ]]; then
+        fastq2="${base_path}_2.fastq"
+        if [ -f "${fastq2}" ]; then
+            process_reads "${base_id}" "${fastq} ${fastq2}"
+            continue
+        fi
+    fi
+    
+    # single-end
+    if [[ ! "${fastq}" =~ _2\.fastq$ ]]; then
+        process_reads "${base_id}" "${fastq}"
     fi
 done
+
+rm -f "${WORK_DIR}/process_star_output.py"
