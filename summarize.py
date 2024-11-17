@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 import numpy as np
 
-def summarize(cohort_file, profile_dir, value_type, start_gene):
+def summarize(cohort_file, profile_dir, value_type):
     # Process TSV
     print(f"[Process TSV] ...    ", end='\r')
     file_extension = os.path.splitext(cohort_file)[1].lower()
@@ -39,9 +39,8 @@ def summarize(cohort_file, profile_dir, value_type, start_gene):
     # Add START_GENE column
     cohort_df = cohort_df[cohort_df.iloc[:, 0].isin(gene_value_dict.keys())]
     cohort_df = cohort_df.reset_index(drop=True)
+    cohort_df['START_GENE'] = ""
     result_df = pd.concat([cohort_df, gene_value_df], axis=1)
-    start_gene_index = result_df.columns.get_loc(start_gene)
-    result_df.insert(start_gene_index, 'START_GENE', "")
    
     result_df.to_csv(output_file, index=False)
     cohort_df.to_csv(output_file2, index=False)
@@ -49,10 +48,9 @@ def summarize(cohort_file, profile_dir, value_type, start_gene):
     
 
 if __name__ == "__main__":
-    '''Command: python3 summarize.py <cohort.csv> <profile_dir/> <start_gene> <value_type>'''
+    '''Command: python3 summarize.py <cohort.csv> <profile_dir/> <value_type>'''
     cohort_file = sys.argv[1]
     profile_dir = sys.argv[2]
-    start_gene = sys.argv[3]
-    value_type = sys.argv[4]
+    value_type = sys.argv[3]
    
-    summarize(cohort_file, profile_dir, value_type, start_gene)
+    summarize(cohort_file, profile_dir, value_type)

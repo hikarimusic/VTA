@@ -49,7 +49,7 @@ Align and profile RNA-seq data:
 
 Summarize the profiles:
 ```sh
-python3 summarize.py <cohort.csv> <profile_dir/> <start_gene> <value_type>
+python3 summarize.py <cohort.csv> <profile_dir/> <value_type>
 ```
 
 Perform clustering analysis:

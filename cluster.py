@@ -79,7 +79,7 @@ def cluster(summarize_file, group_columns):
     # Hierarchy clustering
     print(f"[Hierarchy Cluster] ...", end='\r')
     gene_dist = pdist(expression_data.T, metric='correlation')
-    case_dist = pdist(expression_data, metric='correlation')
+    case_dist = pdist(expression_data, metric='seuclidean')
     
     gene_linkage = hierarchy.linkage(gene_dist, method='ward')
     case_linkage = hierarchy.linkage(case_dist, method='ward')

@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-cat > process_star_output.py << 'EOF'
+PYTHON_SCRIPT=$(mktemp)
+cat > "${PYTHON_SCRIPT}" << 'EOF'
 #!/usr/bin/env python3
 import pandas as pd
 import numpy as np
@@ -137,7 +138,12 @@ process_reads() {
     local base_id="$1"
     local reads="$2"
     local output_prefix="${OUTPUT_DIR}/${base_id}"
-    
+
+    if [ -f "${output_prefix}.tsv" ]; then
+        echo "[Skip] ${base_id}"
+        return 0
+    fi
+
     echo "[Mapping] ${base_id}"
     
     # Run STAR alignment
@@ -149,7 +155,7 @@ process_reads() {
     
     echo "[Transform] ${base_id}"
     
-    python3 "${WORK_DIR}/process_star_output.py" \
+    python3 "${PYTHON_SCRIPT}" \
             "${output_prefix}.ReadsPerGene.out.tab" \
             "${WORK_DIR}/gencode.v36.annotation.gtf" \
             "${output_prefix}.tsv"
@@ -181,5 +187,3 @@ find "${INPUT_DIR}" -name "*.fastq" | while read -r fastq; do
         process_reads "${base_id}" "${fastq}"
     fi
 done
-
-rm -f "${WORK_DIR}/process_star_output.py"
