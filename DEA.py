@@ -326,7 +326,7 @@ def DEG(summarize_file, group_column, group1, group2):
 
 
 if __name__ == "__main__":
-    '''Command: python3 DEG.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... '''
+    '''Command: python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... '''
     summarize_file = sys.argv[1]
     group_column = sys.argv[2]
     separator_index = sys.argv.index('--')

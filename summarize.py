@@ -39,11 +39,10 @@ def summarize(cohort_file, profile_dir, value_type):
     # Add START_GENE column
     cohort_df = cohort_df[cohort_df.iloc[:, 0].isin(gene_value_dict.keys())]
     cohort_df = cohort_df.reset_index(drop=True)
+    cohort_df.to_csv(output_file2, index=False)
     cohort_df['START_GENE'] = ""
     result_df = pd.concat([cohort_df, gene_value_df], axis=1)
-   
     result_df.to_csv(output_file, index=False)
-    cohort_df.to_csv(output_file2, index=False)
     print("[Save Result] Complete                 ")
     
 

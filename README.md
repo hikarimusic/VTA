@@ -57,12 +57,17 @@ Perform clustering analysis:
 python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... 
 ```
 
-Perform differentially expressed gene analysis:
+Perform differentially expression analysis:
 ```sh
-python3 DEG.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
+python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
 ```
 
 Perform gene set enrichment analysis:
 ```sh
-python3 GSEA.py <cohort/summarize.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>
+python3 GSEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>
+```
+
+Perform survival analysis:
+```sh
+python3 survival.py <cohort/summary.csv> <time> <event> <group_column1> <group_column2> ...
 ```

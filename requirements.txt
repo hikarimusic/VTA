@@ -1,9 +1,7 @@
+matplotlib
 numpy
 pandas
 scikit-learn
-matplotlib
-seaborn
 scipy
+seaborn
 statsmodels
-pydeseq2
-tqdm

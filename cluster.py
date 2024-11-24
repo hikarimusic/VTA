@@ -36,18 +36,18 @@ def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
         plt.yticks(fontsize=6)
         plt.legend(title=group_column, title_fontsize=5, fontsize=5)
        
-        output_file = os.path.join(output_dir, f'Cluster_PCA_{group_column.replace(" ", "_")}.pdf')
+        output_file = os.path.join(output_dir, f'cluster_PCA_{group_column.replace(" ", "_")}.pdf')
         plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
-        output_file = os.path.join(output_dir, f'Cluster_PCA_{group_column.replace(" ", "_")}.png')
+        output_file = os.path.join(output_dir, f'cluster_PCA_{group_column.replace(" ", "_")}.png')
         plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
 
         # Add sample ID labels
         for idx, row in pca_df.iterrows():
             plt.annotate(row[sample_ids.name], (row['PC1'], row['PC2']), xytext=(3, 3), textcoords='offset points', fontsize=5, alpha=0.7)
 
-        output_file = os.path.join(output_dir, f'Cluster_PCAs_{group_column.replace(" ", "_")}.pdf')
+        output_file = os.path.join(output_dir, f'cluster_PCAs_{group_column.replace(" ", "_")}.pdf')
         plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
-        output_file = os.path.join(output_dir, f'Cluster_PCAs_{group_column.replace(" ", "_")}.png')
+        output_file = os.path.join(output_dir, f'cluster_PCAs_{group_column.replace(" ", "_")}.png')
         plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
         plt.close()
    
@@ -182,7 +182,7 @@ def cluster(summarize_file, group_columns):
     output_dir = os.path.dirname(summarize_file)
     # output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.pdf')
     # plt.savefig(output_file, format='pdf', dpi=600, bbox_inches='tight')
-    output_file = os.path.join(output_dir, f'Cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.png')
+    output_file = os.path.join(output_dir, f'cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.png')
     plt.savefig(output_file, format='png', dpi=600, bbox_inches='tight')
     plt.close()
     
@@ -190,8 +190,6 @@ def cluster(summarize_file, group_columns):
     cohort_file = os.path.join(output_dir, 'cohort.csv')
     cohort_df = pd.read_csv(cohort_file)
     cohort_df_ordered = cohort_df.loc[data_ordered.index]
-    ordered_output = os.path.join(output_dir, 'cohort_ordered.csv')
-    cohort_df_ordered.to_csv(ordered_output, index=False)
     for i in range(2, 11):
         cohort_df_ordered[f'{i}_clusters'] = [f"{i}_cluster{label}" for label in cluster_labels[i][case_order]]
     clustered_output = os.path.join(output_dir, 'cohort_clustered.csv')
@@ -199,7 +197,7 @@ def cluster(summarize_file, group_columns):
     print("[Save Heatmap] Complete                 ")
 
 if __name__ == "__main__":
-    '''Command: python3 cluster.py <cohort/summarize.csv> <group_column1> <group_column2> ... '''
+    '''Command: python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... '''
     summarize_file = sys.argv[1]
     group_columns = sys.argv[2:]
 
