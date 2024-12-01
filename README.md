@@ -1,4 +1,4 @@
-# VTA
+# AMATERASU
 A Complete Library for Transcriptome Analysis
 
 ## Setup
