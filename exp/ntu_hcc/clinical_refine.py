@@ -1,56 +1,86 @@
 import pandas as pd
 import numpy as np
 
-# Read the input TSV file
 df = pd.read_csv('clinical.tsv', sep='\t')
-
-# Drop duplicates based on case_id, keeping the first occurrence
 df = df.drop_duplicates(subset=['case_id'], keep='first')
 
-# Create a copy of the filtered dataframe to avoid warnings
-df = df[df['vital_status'].isin(['Dead', 'Alive'])].copy()
+gender_mapping = {
+    'male': 'male',
+    'female': 'female'
+}
+df.loc[:, 'Gender'] = df['gender'].map(gender_mapping)
 
-# Create new 'event' column (0 for Alive, 1 for Dead)
-df.loc[:, 'event'] = (df['vital_status'] == 'Dead').astype(int)
 
-# Create new 'time' column based on conditions
-df.loc[:, 'time'] = np.where(
-    df['event'] == 1,
+race_mapping = {
+    'asian': 'asian',
+    'white': 'white',
+    'black or african american': 'black'
+}
+df.loc[:, 'Race'] = df['race'].map(race_mapping)
+
+
+tumor_mapping = {
+    'T1': 'T1',
+    'T2': 'T2',
+    'T2a': 'T2',
+    'T2b': 'T2',
+    'T3': 'T3',
+    'T3a': 'T3',
+    'T3b': 'T3',
+    'T4': 'T4'
+}
+df.loc[:, 'Tumor'] = df['ajcc_pathologic_t'].map(tumor_mapping)
+
+
+nodes_mapping = {
+    'N0': 'N0',
+    'N1': 'N1',
+    'NX': 'NX'
+}
+df.loc[:, 'Nodes'] = df['ajcc_pathologic_n'].map(nodes_mapping)
+
+
+metastasis_mapping = {
+    'M0': 'M0',
+    'M1': 'M1',
+    'MX': 'MX'
+}
+df.loc[:, 'Metastasis'] = df['ajcc_pathologic_m'].map(metastasis_mapping)
+
+
+stage_mapping = {
+    'Stage I': 'Stage I',
+    'Stage II': 'Stage II',
+    'Stage III': 'Stage III',
+    'Stage IIIA': 'Stage III',
+    'Stage IIIB': 'Stage III',
+    'Stage IIIC': 'Stage III',
+    'Stage IV': 'Stage IV',
+    'Stage IVA': 'Stage IV',
+    'Stage IVB': 'Stage IV'
+}
+df.loc[:, 'Stage'] = df['ajcc_pathologic_stage'].map(stage_mapping)
+
+
+event_mapping = {
+    'Dead': 1,
+    'Alive': 0
+}
+df.loc[:, 'Event'] = df['vital_status'].map(event_mapping)
+
+
+df.loc[:, 'Days'] = np.where(
+    df['Event'] == 1,
     df['days_to_death'],
     df['days_to_last_follow_up']
 )
+df.loc[:, 'Days'] = pd.to_numeric(df['Days'], errors='coerce')
 
-# Convert '--' to NaN in the time column if present
-df.loc[:, 'time'] = df['time'].replace("'--", np.nan)
 
-# Convert time to numeric, coercing errors to NaN
-df.loc[:, 'time'] = pd.to_numeric(df['time'], errors='coerce')
-
-# Get the first two column names
 cols = df.columns.tolist()
-first_col = cols[0]
-second_col = cols[1]
-
-# Swap the first two columns
 cols[0], cols[1] = cols[1], cols[0]
-
-# Reorder the DataFrame columns
 df = df[cols]
-
-# Convert hyphens to underscores in the first column (case_submitter_id)
 df.iloc[:, 0] = df.iloc[:, 0].str.replace('-', '_')
 
-# Save the processed data to the output TSV file
-df.to_csv('clinical_fine.tsv', sep='\t', index=False)
 
-# Print statistics
-original_rows = len(pd.read_csv('clinical.tsv', sep='\t'))
-print(f"Original number of rows: {original_rows}")
-print(f"Number of rows after deduplication: {len(df[df['vital_status'].isin(['Dead', 'Alive'])])}")
-print(f"Number of rows in final output: {len(df)}")
-print("\nSample of event and time columns:")
-print(df[['vital_status', 'event', 'time']].head())
-print("\nSample of converted case submitter IDs:")
-print(df.iloc[:5, 0])  # Show first 5 entries of first column
-print("\nColumns in output file:")
-print(df.columns.tolist()[:5], "...")  # Show first 5 columns
+df.to_csv('LIHC.tsv', sep='\t', index=False)
