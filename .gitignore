@@ -75,3 +75,4 @@ exp/simulate/judge
 
 # Keep
 !requirements.txt
+!assets/*
