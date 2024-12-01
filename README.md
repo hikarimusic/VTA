@@ -130,7 +130,7 @@ PCA plots corresponding to each column will be generated in `<cohort/>`. Example
 Heatmap with hierarchy clustering will be generated in `<cohort/>`. Example:
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/heatmap.png" width=500>
 
-If `[-n]` is specified, samples will be labeled into n clusters and new summary files will be generated. You can use `cohort/summary_cluster.csv` instead of `cohort/summary.csv` in the following analysis to access the cluster column.
+If `[-n]` is specified, samples will be labeled into n clusters and new summary files will be generated. You can use `cohort/summary_cluster.csv` instead of `cohort/summary.csv` in the following analysis to access the `Cluster` column.
 
 All the configuration such as figure sizes can be set in the head of `cluster.py`.
 
