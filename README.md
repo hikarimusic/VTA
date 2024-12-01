@@ -39,7 +39,7 @@ Align and profile RNA-seq data with STAR:
 ./process_STAR.sh <input_dir/> <output_dir/>
 ```
 
-The `<input_dir/>` should contains sequencing raw data. Both pair-end and single-end data are acceptable. Example of `<input_dir/>`:
+The `<input_dir/>` should contain sequencing raw data. Both pair-end and single-end data are acceptable. Example of `<input_dir/>`:
 
 ```sh
 my_sequences/
@@ -96,7 +96,7 @@ my_profiles/
 └── TCGA_BD_A3EP.tsv
 ```
 
-The `<value_type>` specifies which expression value to be used. Example of a profile tsv file (in this case we can use `tpm_unstranded` as the value type):
+`<value_type>` specifies the expression value to be used. Example of a profile `.tsv` file (in this case we can use `tpm_unstranded` as the value type):
 ```
 # gene-model: GENCODE v36
 gene_id	gene_name	gene_type	unstranded	stranded_first	stranded_second	tpm_unstranded	fpkm_unstranded	fpkm_uq_unstranded
@@ -109,7 +109,7 @@ ENSG00000000005.6	TNMD	protein_coding	0	0	0	0.0000	0.0000	0.0000
 ENSG00000000419.13	DPM1	protein_coding	1083	556	528	56.2676	21.2327	30.1006
 ```
 
-After running the command, a folder `<cohort/>` will be created. The file `summary.csv` will add gene expression values to the original cohort.
+After running the command, a folder `<cohort/>` will be created. The file `cohort/summary.csv` will add gene expression values to the original cohort.
 
 ## Clustering Analysis
 
@@ -119,18 +119,18 @@ source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
-Perform clustering analysis:
+Perform clustering analysis with columns in interest:
 ```sh
 python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... 
 ```
 
-PCA plots corresponding to each column will be generated. Example:
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/pca_plot.png" width=500>
+PCA plots corresponding to each column will be generated in `<cohort/>`. Example:
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/pca_plot.png" width=300>
 
-Heatmap with hierarchy clustering will be generated. Example:
+Heatmap with hierarchy clustering will be generated in `<cohort/>`. Example:
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/heatmap.png" width=500>
 
-If `[-n]` is specified, samples will be labeled into n clusters and new summary files will be generated. You can use `summary_cluster.csv` instead of `summary.csv` in the following analysis to access the cluster column.
+If `[-n]` is specified, samples will be labeled into n clusters and new summary files will be generated. You can use `cohort/summary_cluster.csv` instead of `cohort/summary.csv` in the following analysis to access the cluster column.
 
 All the configuration such as figure sizes can be set in the head of `cluster.py`.
 
