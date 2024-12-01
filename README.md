@@ -31,7 +31,7 @@ Profile the mRNA expression:
 ```
 
 ---
-If you want to use STAR to process the data:
+If you want to use STAR to process the data :
 ```sh
 chmod +x setup_STAR.sh process_STAR.sh
 ```
