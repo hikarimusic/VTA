@@ -1,5 +1,5 @@
 # AMATERASU
-A Complete Library for Transcriptome Analysis
+Automated Mapping And Transcriptome Expression Research Analysis Suite
 
 ## Setup
 
