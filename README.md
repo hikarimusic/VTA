@@ -125,9 +125,11 @@ python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ...
 ```
 
 PCA plots corresponding to each column will be generated as `<cohort/cluster_PCA_....png>`. Example:
+
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_PCA.png" width=300>
 
 Heatmaps with hierarchy clustering will be generated as `<cohort/cluster_heatmap_....png>`. Example:
+
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_heatmap.png" width=500>
 
 If `[-n]` is specified in the command, samples will be labeled into n clusters and `cohort/summary_cluster.csv` will be generated. You can use it instead of `cohort/summary.csv` in the following analysis to access the `Cluster` column. Example of `cohort/summary_cluster.csv`:
@@ -156,10 +158,12 @@ python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- 
 The first group will contain samples with `<group_column>` equal to `<group_a?>`, and the second group will contain samples with `<group_column>` equal to `<group_b?>`.
 
 Volcano plots and heatmaps comparing the two groups will be generated as `<cohort/DEA_volcano_....png>` and `<cohort/DEA_heatmap_....png>`. Example:
+
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" width=300>
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" width=300>
 
 Strip plots of the differential expression genes will be generated as `<cohort/DEA_strip_....png>`. Example:
+
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" width=500>
 
 The differential expression genes will be summarized as `cohort\DEA_genes_....png`. Example:
