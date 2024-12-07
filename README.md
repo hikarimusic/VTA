@@ -159,8 +159,7 @@ The first group will contain samples with `<group_column>` equal to `<group_a?>`
 
 Volcano plots and heatmaps comparing the two groups will be generated as `<cohort/DEA_volcano_....png>` and `<cohort/DEA_heatmap_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" width=300>
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" width=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" width=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" width=300>
 
 Strip plots of the differential expression genes will be generated as `<cohort/DEA_strip_....png>`. Example:
 
