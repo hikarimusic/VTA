@@ -11,6 +11,7 @@ count_plot_generate = False
 count_plot_format = 'png'
 count_plot_size = (3.5, 3.5)
 count_plot_fontsize = 6
+count_plot_dpi = 600
 
 volcano_plot_format = 'png'
 volcano_plot_size = (3.5, 3.5)
@@ -21,6 +22,7 @@ volcano_plot_up_color = 'red'
 volcano_plot_down_color = 'blue'
 volcano_plot_other_color = 'grey'
 volcano_plot_line = True
+volcano_plot_dpi = 600
 
 strip_plot_format = 'png'
 strip_plot_size = (3.5, 7.0)
@@ -29,6 +31,7 @@ strip_plot_dotsize = 3
 strip_plot_dotalpha = 0.5
 strip_plot_color = 'seismic'
 strip_plot_number = 50
+strip_plot_dpi = 600
 
 heatmap_format = 'png'
 heatmap_size = (3.5, 3.5)
@@ -36,6 +39,7 @@ heatmap_color = 'seismic'
 heatmap_fontsize = 6
 heatmap_gene_metric = 'correlation'
 heatmap_gene_method = 'ward'
+heatmap_dpi = 600
 
 # -------------------------
 
@@ -88,7 +92,7 @@ def generate_count_plot(metadata, group_column, group1, group2, output_dir):
                 plt.legend(fontsize=count_plot_fontsize)
 
                 count_plot_file = os.path.join(output_dir, f'DEA_count_{"+".join(group1)}_vs_{"+".join(group2)}_{col}.' + count_plot_format)
-                plt.savefig(count_plot_file, format=count_plot_format, dpi=600, bbox_inches='tight')
+                plt.savefig(count_plot_file, format=count_plot_format, dpi=count_plot_dpi, bbox_inches='tight')
                 plt.close()
 
                 print(f"[Chi-Square] Group / {col}: {p_value}                 ")
@@ -119,7 +123,7 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     plt.ylabel('-Log10 Adjusted P-value', fontsize=volcano_plot_fontsize)
     
     volcano_file = os.path.join(output_dir, f'DEA_volcano_{"+".join(group1)}_vs_{"+".join(group2)}.' + volcano_plot_format)
-    plt.savefig(volcano_file, format=volcano_plot_format, dpi=600, bbox_inches='tight')
+    plt.savefig(volcano_file, format=volcano_plot_format, dpi=volcano_plot_dpi, bbox_inches='tight')
     plt.close()
 
     print("[Volcano Plot] Complete                 ")
@@ -173,7 +177,7 @@ def generate_strip_plot(results_df, expression_data, metadata, group_column, gro
         plt.legend(loc='upper right', fontsize=strip_plot_fontsize)
         
         strip_plot_file = os.path.join(output_dir, f'DEA_strip_{"+".join(group1)}_vs_{"+".join(group2)}_{title_prefix}.' + strip_plot_format)
-        plt.savefig(strip_plot_file, format=strip_plot_format, dpi=600, bbox_inches='tight')
+        plt.savefig(strip_plot_file, format=strip_plot_format, dpi=strip_plot_dpi, bbox_inches='tight')
         plt.close()
     
     print("[Strip Plot] Complete                 ")
@@ -284,7 +288,7 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
     
     # Save the plot
     heatmap_file = os.path.join(output_dir, f'DEA_heatmap_{"+".join(group1)}_vs_{"+".join(group2)}.' + heatmap_format)
-    plt.savefig(heatmap_file, format=heatmap_format, dpi=600, bbox_inches='tight')
+    plt.savefig(heatmap_file, format=heatmap_format, dpi=heatmap_dpi, bbox_inches='tight')
     plt.close()
 
     print("[Heatmap] Complete                 ")

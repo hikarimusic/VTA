@@ -7,6 +7,7 @@ pca_plot_dotsize = 10
 pca_plot_color = 'deep'
 pca_plot_labels = False
 pca_plot_group_order = {} # Example: {"Gender": ['female', 'male']}
+pca_plot_dpi = 600
 
 gene_threshold = 1
 gene_normalize = True
@@ -22,6 +23,7 @@ heatmap_font_size = 6
 heatmap_color = 'seismic'
 heatmap_group_preset = ["Set1", "tab10", "Dark2"]
 heatmap_group_order = {} # Example: {"Gender": ['female', 'male']}
+heatmap_dpi = 600
 
 # -------------------------
 
@@ -73,7 +75,7 @@ def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
                 plt.annotate(row[sample_ids.name], (row['PC1'], row['PC2']), xytext=(3, 3), textcoords='offset points', fontsize=5, alpha=0.7)
 
         output_file = os.path.join(output_dir, f'cluster_PCA_{group_column.replace(" ", "_")}.' + pca_plot_format)
-        plt.savefig(output_file, format=pca_plot_format, dpi=600, bbox_inches='tight')
+        plt.savefig(output_file, format=pca_plot_format, dpi=pca_plot_dpi, bbox_inches='tight')
         plt.close()
    
     print(f"[PCA] Complete                 ")
@@ -236,7 +238,7 @@ def cluster(summarize_file, group_columns):
     print("[Save Heatmap] ...", end='\r')
     output_dir = os.path.dirname(summarize_file)
     output_file = os.path.join(output_dir, f'cluster_heatmap_{"_".join(group_columns).replace(" ", "_")}.' + heatmap_format)
-    plt.savefig(output_file, format=heatmap_format, dpi=600, bbox_inches='tight')
+    plt.savefig(output_file, format=heatmap_format, dpi=heatmap_dpi, bbox_inches='tight')
     plt.close()
     
     print("[Save Heatmap] Complete                 ")
