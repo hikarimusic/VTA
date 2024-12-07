@@ -109,7 +109,13 @@ ENSG00000000005.6	TNMD	protein_coding	0	0	0	0.0000	0.0000	0.0000
 ENSG00000000419.13	DPM1	protein_coding	1083	556	528	56.2676	21.2327	30.1006
 ```
 
-After running the command, a folder `<cohort/>` will be created. The file `cohort/summary.csv` will contain original cohort data as well as gene expression values, which can be used in the following analysis.
+After running the command, a folder `<cohort/>` will be created. The original cohort with gene expression values will be generated as `<cohort/summary.csv>`, which can be used in the following analysis. Example of `<cohort/summary.csv>`:
+
+| sample_id | ... | TSPAN6 | TNMD | ... |
+| :- | :- | :- | :- | :- |
+| TCGA_DD_AAVP | ... | 136.4 | 0.00 | ... |
+| TCGA_WX_AA46 | ... | 45.3 | 0.19 | ... |
+| TCGA_BD_A3EP | ... | 60.1 | 0.04 | ... |
 
 ## Clustering Analysis
 
@@ -176,11 +182,6 @@ The differential expression genes will be summarized as `cohort\DEA_genes_....pn
 All the configuration such as figure size and format can be set in the head of `DEA.py`.
 
 ## Temp
-
-Perform differentially expression analysis:
-```sh
-python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
-```
 
 Perform gene set enrichment analysis:
 ```sh
