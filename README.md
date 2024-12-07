@@ -74,7 +74,7 @@ source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
-Summarize the profiles based on you cohort:
+Summarize the profiles based on your cohort:
 ```sh
 python3 summarize.py <cohort.csv> <profile_dir/> <value_type>
 ```
@@ -109,7 +109,7 @@ ENSG00000000005.6	TNMD	protein_coding	0	0	0	0.0000	0.0000	0.0000
 ENSG00000000419.13	DPM1	protein_coding	1083	556	528	56.2676	21.2327	30.1006
 ```
 
-After running the command, a folder `<cohort/>` will be created. The file `cohort/summary.csv` will add gene expression values to the original cohort.
+After running the command, a folder `<cohort/>` will be created. The file `cohort/summary.csv` will contain original cohort data as well as gene expression values, which can be used in the following analysis.
 
 ## Clustering Analysis
 
@@ -125,21 +125,46 @@ python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ...
 ```
 
 PCA plots corresponding to each column will be generated in `<cohort/>`. Example:
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/pca_plot.png" width=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_PCA.png" width=300>
 
-Heatmap with hierarchy clustering will be generated in `<cohort/>`. Example:
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/heatmap.png" width=500>
+Heatmaps with hierarchy clustering will be generated in `<cohort/>`. Example:
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_heatmap.png" width=500>
 
-If `[-n]` is specified, samples will be labeled into n clusters and new summary files will be generated. You can use `cohort/summary_cluster.csv` instead of `cohort/summary.csv` in the following analysis to access the `Cluster` column.
+If `[-n]` is specified, samples will be labeled into n clusters and `summary_cluster.csv` will be generated in `<cohort/>`. You can use `cohort/summary_cluster.csv` instead of `cohort/summary.csv` in the following analysis to access the `Cluster` column. Example of `summary_cluster.csv`:
 
-All the configuration such as figure sizes can be set in the head of `cluster.py`.
+| sample_id | gender | ... | Cluster | 
+| :- | :- | :- | :- |
+| TCGA_DD_AAVP | male | ... | Cluster1 |
+| TCGA_WX_AA46 | male | ... | Cluster2 |
+| TCGA_BD_A3EP | female | ... | Cluster3 |
+
+All the configuration such as figure size and format can be set in the head of `cluster.py`.
+
+## Differential Expression Analysis
+
+Start AMATERASU:
+```sh
+source .amaterasu/bin/activate
+cd AMATERASU/
+```
+
+Perform differential expression analysis between two groups:
+```sh
+python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
+```
+
+The first group will contain samples with `<group_column>` equal to `<group_a?>`, and the second group will contain samples with `<group_column>` equal to `<group_b?>`.
+
+Volcano plots and heatmaps comparing the two groups will be generated in `<cohort/>`. Example:
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" width=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" width=300>
+
+Strip plots of the differential expression genes will be generated in `<cohort/>`. Example:
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" width=500>
+
+All the configuration such as figure size and format can be set in the head of `DEA.py`.
 
 ## Temp
-
-
-
-
-
 
 Perform differentially expression analysis:
 ```sh
