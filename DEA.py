@@ -10,11 +10,12 @@ deg_p_value_threshold = 0.05
 count_plot_generate = False
 count_plot_format = 'png'
 count_plot_size = (3.5, 3.5)
-count_plot_fontsize = 6
 count_plot_dpi = 600
+count_plot_fontsize = 6
 
 volcano_plot_format = 'png'
 volcano_plot_size = (3.5, 3.5)
+volcano_plot_dpi = 600
 volcano_plot_fontsize = 6
 volcano_plot_dotsize = 6
 volcano_plot_dotalpha = 0.5
@@ -22,24 +23,23 @@ volcano_plot_up_color = 'red'
 volcano_plot_down_color = 'blue'
 volcano_plot_other_color = 'grey'
 volcano_plot_line = True
-volcano_plot_dpi = 600
 
 strip_plot_format = 'png'
 strip_plot_size = (3.5, 7.0)
+strip_plot_dpi = 600
 strip_plot_fontsize = 6
 strip_plot_dotsize = 3
 strip_plot_dotalpha = 0.5
 strip_plot_color = 'seismic'
 strip_plot_number = 50
-strip_plot_dpi = 600
 
 heatmap_format = 'png'
 heatmap_size = (3.5, 3.5)
+heatmap_dpi = 600
 heatmap_color = 'seismic'
 heatmap_fontsize = 6
 heatmap_gene_metric = 'correlation'
 heatmap_gene_method = 'ward'
-heatmap_dpi = 600
 
 # -------------------------
 
@@ -113,9 +113,9 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     plt.scatter(results_df['log2_fold_change'], -np.log10(results_df['adjusted_pvalue']), c=results_df['color'], alpha=volcano_plot_dotalpha, s=volcano_plot_dotsize)
     
     if volcano_plot_line == True:
-        plt.axvline(x=log2_fc_threshold, color='gray', linestyle='--')
-        plt.axvline(x=-log2_fc_threshold, color='gray', linestyle='--')
-        plt.axhline(y=-np.log10(p_value_threshold), color='gray', linestyle='--')
+        plt.axvline(x=log2_fc_threshold, color=volcano_plot_other_color, linestyle='--')
+        plt.axvline(x=-log2_fc_threshold, color=volcano_plot_other_color, linestyle='--')
+        plt.axhline(y=-np.log10(p_value_threshold), color=volcano_plot_other_color, linestyle='--')
     
     plt.xticks(fontsize=volcano_plot_fontsize)
     plt.yticks(fontsize=volcano_plot_fontsize)
@@ -347,9 +347,9 @@ def DEG(summarize_file, group_column, group1, group2):
     # Count significant genes
     log2_fc_threshold = deg_log2_fc_threshold
     p_value_threshold = deg_p_value_threshold
-    down_regulated = sum((results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
-    up_regulated = sum((results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))    
-    print(f"[Find DEG] Down: {down_regulated} / Up: {up_regulated}                 ")
+    up_regulated = sum((results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))
+    down_regulated = sum((results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold))    
+    print(f"[Find DEG] Up: {up_regulated} / Down: {down_regulated}                 ")
 
     # Save results
     print("[Save Genes] ...", end='\r')
@@ -374,8 +374,6 @@ def DEG(summarize_file, group_column, group1, group2):
 
     # Heatmap
     generate_heatmap(results_df, expression_data, metadata, group_column, group1, group2, output_dir, log2_fc_threshold, p_value_threshold)
-
-    print(f"[Create Plots] Complete                 ")
 
 
 if __name__ == "__main__":

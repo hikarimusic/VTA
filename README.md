@@ -4,23 +4,27 @@ Automated Mapping And Transcriptome Expression Research Analysis Suite
 ## Setup
 
 Clone the repository:
+
 ```sh
 git clone https://github.com/hikarimusic/AMATERASU.git
 ```
 
 Make a virtual environment:
+
 ```sh
 python3 -m venv .amaterasu
 source .amaterasu/bin/activate
 ```
 
 Install python packages:
+
 ```sh
 cd AMATERASU/
 pip install -r requirements.txt
 ```
 
 Download and index genome files with STAR:
+
 ```sh
 chmod +x setup_STAR.sh process_STAR.sh
 ./setup_STAR.sh
@@ -29,12 +33,14 @@ chmod +x setup_STAR.sh process_STAR.sh
 ## Raw Data Processing
 
 Start AMATERASU:
+
 ```sh
 source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
 Align and profile RNA-seq data with STAR:
+
 ```sh
 ./process_STAR.sh <input_dir/> <output_dir/>
 ```
@@ -52,6 +58,7 @@ my_sequences/
 ```
 
 The `<output_dir/>` will contain expression profiles of the samples. Example of `<output_dir/>`:
+
 ```sh
 my_profiles/
 ├── sample1.tsv
@@ -69,12 +76,14 @@ make
 ## Cohort Summary
 
 Start AMATERASU:
+
 ```sh
 source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
 Summarize the profiles based on your cohort:
+
 ```sh
 python3 summarize.py <cohort.csv> <profile_dir/> <value_type>
 ```
@@ -97,6 +106,7 @@ my_profiles/
 ```
 
 `<value_type>` specifies the expression value to be used. Example of a profile `.tsv` file (in this case we can use `tpm_unstranded` as the value type):
+
 ```
 # gene-model: GENCODE v36
 gene_id	gene_name	gene_type	unstranded	stranded_first	stranded_second	tpm_unstranded	fpkm_unstranded	fpkm_uq_unstranded
@@ -120,12 +130,14 @@ After running the command, a folder `<cohort/>` will be created. The original co
 ## Clustering Analysis
 
 Start AMATERASU:
+
 ```sh
 source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
 Perform clustering analysis with columns in interest:
+
 ```sh
 python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... 
 ```
@@ -151,12 +163,14 @@ All the configuration such as figure size and format can be set in the head of `
 ## Differential Expression Analysis
 
 Start AMATERASU:
+
 ```sh
 source .amaterasu/bin/activate
 cd AMATERASU/
 ```
 
 Perform differential expression analysis between two groups:
+
 ```sh
 python3 DEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... 
 ```
@@ -171,22 +185,59 @@ Strip plots of the differential expression genes will be generated as `<cohort/D
 
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" width=500>
 
-The differential expression genes will be summarized as `cohort\DEA_genes_....png`. Example:
+The differential expression genes will be summarized as `cohort/DEA_genes_....csv`. Example:
 
 | gene | log2_fold_change | p_value | adjusted_pvalue |
-| - | - | - | - |
+| :- | :- | :- | :- |
 | SAR1B | -1.098911206284902 | 7.924706080956533e-44 | 1.2597112786288506e-39 |
 | ACSM2A | -2.25593421738425 | 1.080155659882675e-40 | 8.585077184747501e-37 |
 | ACSM2B | -2.023553155838623 | 2.481105941588788e-40 | 1.3146553349165125e-36 |
 
 All the configuration such as figure size and format can be set in the head of `DEA.py`.
 
-## Temp
+## Gene Set Enrichment Analysis
 
-Perform gene set enrichment analysis:
+Start AMATERASU:
+
+```sh
+source .amaterasu/bin/activate
+cd AMATERASU/
+```
+
+Perform gene set enrichment analysis between two groups based on the predefined gene set:
+
 ```sh
 python3 GSEA.py <cohort/summary.csv> <group_column> <group_a1> <group_a2> ... -- <group_b1> <group_b2> ... <geneset.gmt>
 ```
+
+The first group will contain samples with `<group_column>` equal to `<group_a?>`, and the second group will contain samples with `<group_column>` equal to `<group_b?>`. Predefined gene sets and their genes should be specified in `<geneset.gmt>`. Example:
+
+```
+HALLMARK_ADIPOGENESIS    <url>    ABCA1    ABCB8    ACAA2    ...
+HALLMARK_ALLOGRAFT_REJECTION    <url>    AARS1    ABCE1    ABI1    ...
+HALLMARK_ANDROGEN_RESPONSE    <url>    ABCC4    ABHD2    ACSL3    ...
+```
+
+GSEA plots of significant gene sets will be generated in `<cohort/GSEA_gsea_.../>` as `<up_....png>` or `<down_....png>`. Example:
+
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_up.png" height=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_down.png" height=300>
+
+Bar plots showing leading genes of significant gene sets will be generated in `<cohort/GSEA_bar_.../>` as `<up_....png>` or `<down_....png>`. Example:
+
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_up.png" height=500><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_down.png" height=500>
+
+The gene sets will be summarized as `cohort/GSEA_genesets_....csv`. Example:
+
+| gene_set | enrichment_score | position | p_value | adjusted_pvalue |
+| :- | :- | :- | :- | :- |
+| HALLMARK_XENOBIOTIC_METABOLISM | -0.350 | 0.639 | 2.31e-21 | 1.15e-19 |
+| HALLMARK_BILE_ACID_METABOLISM | -0.457 | 0.657 | 1.27e-20 | 3.19e-19 |
+| HALLMARK_MYC_TARGETS_V1 | 0.336 | 0.240 | 2.92e-20 | 4.86e-19 |
+
+All the configuration such as figure size and format can be set in the head of `GSEA.py`.
+
+## Temp
+
 
 Perform survival analysis:
 ```sh

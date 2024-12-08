@@ -2,12 +2,12 @@
 
 pca_plot_format = 'png'
 pca_plot_size = (3.5, 3.5)
+pca_plot_dpi = 600
 pca_plot_fontsize = 6
 pca_plot_dotsize = 10
 pca_plot_color = 'deep'
 pca_plot_labels = False
 pca_plot_group_order = {} # Example: {"Gender": ['female', 'male']}
-pca_plot_dpi = 600
 
 gene_threshold = 1
 gene_normalize = True
@@ -19,11 +19,11 @@ cluster_case_method = 'ward'
 
 heatmap_format = 'png'
 heatmap_size = (7.0, 7.0)
+heatmap_dpi = 600
 heatmap_font_size = 6
 heatmap_color = 'seismic'
 heatmap_group_preset = ["Set1", "tab10", "Dark2"]
 heatmap_group_order = {} # Example: {"Gender": ['female', 'male']}
-heatmap_dpi = 600
 
 # -------------------------
 
