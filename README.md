@@ -1,6 +1,7 @@
 # AMATERASU
 [![License](https://img.shields.io/github/license/hikarimusic/AMATERASU)](https://github.com/hikarimusic/AMATERASU/blob/main/LICENSE)
 [![DOI](https://zenodo.org/badge/633322949.svg)](https://doi.org/10.5281/zenodo.14337457)
+[![Stars](https://img.shields.io/github/stars/hikarimusic/AMATERASU)](https://github.com/hikarimusic/AMATERASU)
 
 Automated Mapping And Transcriptome Expression Research Analysis Suite
 
