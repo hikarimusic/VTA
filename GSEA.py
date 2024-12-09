@@ -191,7 +191,6 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
     # Read data
     print(f"[Read Data] ...", end='\r')
     df = pd.read_csv(summarize_file, low_memory=False)
-    df = df.fillna('~')
     start_gene_index = df.columns.get_loc('START_GENE')
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]

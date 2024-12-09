@@ -42,6 +42,9 @@ import seaborn as sns
 def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
     print("[PCA] ...    ", end='\r')
     # Normalize
+    valid_samples = ~metadata[group_columns].isna().any(axis=1)
+    gene_data = gene_data[valid_samples]
+    metadata = metadata[valid_samples]
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(gene_data)
 
@@ -84,7 +87,6 @@ def cluster(summarize_file, group_columns):
     # Read data
     print(f"[Read Data] ...", end='\r')  
     df = pd.read_csv(summarize_file, low_memory=False)
-    df = df.fillna('~')
     start_gene_index = df.columns.get_loc('START_GENE')
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]
@@ -183,13 +185,16 @@ def cluster(summarize_file, group_columns):
         if group_column in heatmap_group_order:
             unique_groups = heatmap_group_order[group_column]
         else:
-            unique_groups = sorted(metadata[group_column].unique(), key=str)
+            unique_groups = sorted(metadata[group_column].dropna().unique(), key=str)
         color_palette = sns.color_palette(color_preset[i%n_preset], n_colors=len(unique_groups))
         color_map = dict(zip(unique_groups, color_palette))
         
         for j, sample in enumerate(data_ordered.index):
             group = metadata.loc[sample, group_column]
-            ax_groups.axvspan(j, j+1, facecolor=color_map[group], alpha=1)
+            if pd.isna(group):
+                ax_groups.axvspan(j, j+1, facecolor='white', alpha=1)
+            else:
+                ax_groups.axvspan(j, j+1, facecolor=color_map[group], alpha=1)
         
         ax_groups.set_xlim(0, len(data_ordered))
         ax_groups.axis('off')
@@ -202,7 +207,7 @@ def cluster(summarize_file, group_columns):
         if group_column in heatmap_group_order:
             unique_groups = heatmap_group_order[group_column]
         else:
-            unique_groups = sorted(metadata[group_column].unique(), key=str)
+            unique_groups = sorted(metadata[group_column].dropna().unique(), key=str)
         color_palette = sns.color_palette(color_preset[i%n_preset], n_colors=len(unique_groups))
         color_map = dict(zip(unique_groups, color_palette))
         legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label=group_column)])

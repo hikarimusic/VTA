@@ -142,6 +142,8 @@ Perform clustering analysis with columns in interest:
 python3 cluster.py <cohort/summary.csv> <group_column1> <group_column2> ... 
 ```
 
+Each of the `<group_column?>` will be labeled in the clustering results.
+
 PCA plots corresponding to each column will be generated as `<cohort/cluster_PCA_....png>`. Example:
 
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_PCA.png" height=300>
@@ -236,10 +238,39 @@ The gene sets will be summarized as `cohort/GSEA_genesets_....csv`. Example:
 
 All the configuration such as figure size and format can be set in the head of `GSEA.py`.
 
-## Temp
+## Survival Analysis
 
+Start AMATERASU:
 
-Perform survival analysis:
+```sh
+source .amaterasu/bin/activate
+cd AMATERASU/
+```
+
+Perform survival analysis to compare among different groups:
 ```sh
 python3 survival.py <cohort/summary.csv> <time> <event> <group_column1> <group_column2> ...
 ```
+
+`<time>` should record the event time, and `<event>` should record the event status (0 for alive, 1 for dead). `<group_column?>` can be group columns or gene names to be compared.
+
+Kaplan–Meier plots corresponding to each column will be generated as `<cohort/survival_KM_....png>`. Example:
+
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/survival_KM.png" height=300>
+
+The survival differences will be summarized as `<cohort/survival_variables.csv>`. Example:
+
+| variable | type | threshold | df | p_value |
+| :- | :- | :- | :- | :- |
+| Tumor | categorical |  | 3 | 2.71e-08 |
+| PCLAF | numerical | 2.29 | 1 | 8.82e-06 |
+
+If `[-all]` is specified, all genes will be analyzed and summarized as `<cohort/survival_genes.csv>` (_instead of finding optimal thresholds, the medians will be used_). Example:
+
+| gene | threshold | df | p_value | adjusted_pvalue |
+| :- | :- | :- | :- | :- |
+| LYPLA2 | 99.9 | 1 | 2.89e-06 | 0.00288 |
+| MRTO4 | 30.6 | 1 | 7.68e-06 | 0.00378 |
+| YBX1 | 184.2 | 1 | 1.14e-05 | 0.00378 |
+
+All the configuration such as figure size and format can be set in the head of `survival.py`.

@@ -5,7 +5,7 @@ gene_normalize = True
 
 deg_multiple_test_correction = 'fdr_bh'
 deg_log2_fc_threshold = 1
-deg_p_value_threshold = 0.05
+deg_p_value_threshold = 0.001
 
 count_plot_generate = False
 count_plot_format = 'png'
@@ -297,7 +297,6 @@ def DEG(summarize_file, group_column, group1, group2):
     # Read data
     print(f"[Read Data] ...", end='\r')
     df = pd.read_csv(summarize_file, low_memory=False)
-    df = df.fillna('~')
     start_gene_index = df.columns.get_loc('START_GENE')
     metadata = df.iloc[:, :start_gene_index + 1]
     gene_data = df.iloc[:, start_gene_index + 1:]

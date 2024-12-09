@@ -1,3 +1,18 @@
+# -------------------------
+
+genes_threshold = 0.001
+
+survival_plot_format = 'png'
+survival_plot_size = (3.5, 3.5)
+survival_plot_dpi = 600
+survival_plot_fontsize = 6
+survival_plot_linewidth = 1
+survival_plot_censorheight = 5
+survival_plot_color = 'tab10'
+
+
+# -------------------------
+
 import sys
 import os
 import pandas as pd
@@ -74,9 +89,9 @@ def find_optimal_threshold(values, durations, events):
 
 def generate_survival_plot(durations, events, groups, group_labels, time_label, output_file):
     plt.style.use('ggplot')
-    plt.figure(figsize=(2.8, 2.8))
+    plt.figure(figsize=survival_plot_size)
     
-    colors = plt.get_cmap('tab10')
+    colors = plt.get_cmap(survival_plot_color)
     unique_groups = np.unique(groups)
     
     for i, group in enumerate(unique_groups):
@@ -110,21 +125,20 @@ def generate_survival_plot(durations, events, groups, group_labels, time_label, 
         
         # Plot survival curve and censored points
         label = f"{group_labels[i]} (n={sum(mask)})"
-        plt.step(unique_times, survival, where='post', label=label, linewidth=1, color=colors(i))
+        plt.step(unique_times, survival, where='post', label=label, linewidth=survival_plot_linewidth, color=colors(i))
         if censored_times:
             plt.plot(censored_times, censored_survivals, '|', 
                     color=colors(i),
-                    markersize=5, 
-                    markeredgewidth=1)
+                    markersize=survival_plot_censorheight, 
+                    markeredgewidth=survival_plot_linewidth)
     
-    plt.xlabel(time_label, fontsize=6)
-    plt.ylabel('Survival Probability', fontsize=6)
-    plt.xticks(fontsize=6)
-    plt.yticks(fontsize=6)
-    plt.legend(fontsize=6)
+    plt.xlabel(time_label, fontsize=survival_plot_fontsize)
+    plt.ylabel('Survival Probability', fontsize=survival_plot_fontsize)
+    plt.xticks(fontsize=survival_plot_fontsize)
+    plt.yticks(fontsize=survival_plot_fontsize)
+    plt.legend(fontsize=survival_plot_fontsize)
     
-    plt.savefig(output_file + '.png', format='png', dpi=600, bbox_inches='tight')
-    plt.savefig(output_file + '.pdf', format='pdf', dpi=600, bbox_inches='tight')
+    plt.savefig(output_file + '.' + survival_plot_format, dpi=survival_plot_dpi, bbox_inches='tight')
     plt.close()
 
 def survival(summarize_file, time_column, event_column, group_columns):
@@ -145,7 +159,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
             values = metadata[column]
         elif column in gene_data.columns:
             values = gene_data[column]
-        elif column == 'GENES':
+        elif column == '-all':
             continue
         else:
             print(f"[Warning] Column {column} not found")
@@ -175,7 +189,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
                 groups,
                 [f'Low', f'High'],
                 time_column,
-                os.path.join(output_dir, f'survival_{column}'),
+                os.path.join(output_dir, f'survival_KM_{column}'),
             )
             results.append({
                 'variable': column,
@@ -195,7 +209,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
             
             chi2, p_value = calculate_logrank(durations, events, groups)
             
-            output_file = os.path.join(output_dir, f'survival_{column}')
+            output_file = os.path.join(output_dir, f'survival_KM_{column}')
             generate_survival_plot(
                 durations,
                 events,
@@ -207,6 +221,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
             results.append({
                 'variable': column,
                 'type': 'categorical',
+                'threshold': "",
                 'df': len(unique_groups)-1,
                 'p_value': p_value
             })
@@ -218,7 +233,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
     results_df.to_csv(results_file, index=False)
     
     # Analyze genes
-    if 'GENES' not in group_columns:
+    if '-all' not in group_columns:
         return
     print("[Analyze Genes] ...", end='\r')
     genes = [gene for gene in gene_data.columns]
@@ -243,6 +258,7 @@ def survival(summarize_file, time_column, event_column, group_columns):
         gene_results.append({
             'gene': gene,
             'threshold': threshold,
+            'df': 1,
             'p_value': p_value
         })
         print(f"[Analyze Genes] {i}/{total_genes}                 ", end='\r')
@@ -250,12 +266,12 @@ def survival(summarize_file, time_column, event_column, group_columns):
     # Save gene results
     gene_results_df = pd.DataFrame(gene_results)
     _, adjusted_pvalues, _, _ = multipletests(gene_results_df['p_value'], method='fdr_bh')
-    gene_results_df['adjusted_p_value'] = adjusted_pvalues
+    gene_results_df['adjusted_pvalue'] = adjusted_pvalues
     gene_results_df = gene_results_df.sort_values('p_value')
     results_file = os.path.join(output_dir, 'survival_genes.csv')
     gene_results_df.to_csv(results_file, index=False)
 
-    significant_genes = gene_results_df[gene_results_df['adjusted_p_value'] < 0.05]
+    significant_genes = gene_results_df[gene_results_df['adjusted_pvalue'] < genes_threshold]
     print(f"[Analyze Genes] Significant genes: {len(significant_genes)}                 ")
 
 if __name__ == "__main__":
