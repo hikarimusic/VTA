@@ -1,4 +1,7 @@
 # AMATERASU
+[![License](https://img.shields.io/github/license/hikarimusic/AMATERASU)](https://github.com/hikarimusic/AMATERASU/blob/main/LICENSE)
+[![DOI](https://zenodo.org/badge/633322949.svg)](https://doi.org/10.5281/zenodo.14337457)
+
 Automated Mapping And Transcriptome Expression Research Analysis Suite
 
 ## Setup
@@ -274,3 +277,8 @@ If `[-all]` is specified, all genes will be analyzed and summarized as `<cohort/
 | YBX1 | 184.2 | 1 | 1.14e-05 | 0.00378 |
 
 All the configuration such as figure size and format can be set in the head of `survival.py`.
+
+## Others
+
+* **Contact**: hikarimusic.tm@gmail.com
+* **Citation**: Tung, Yeu-Guang (2024). AMATERASU: Automated Mapping And Transcriptome Expression Research Analysis Suite. Zenodo. https://doi.org/10.5281/zenodo.14337458
