@@ -24,6 +24,7 @@ heatmap_font_size = 6
 heatmap_color = 'seismic'
 heatmap_group_preset = ["Set1", "tab10", "Dark2"]
 heatmap_group_order = {} # Example: {"Gender": ['female', 'male']}
+heatmap_gene_name = False
 
 # -------------------------
 
@@ -154,27 +155,30 @@ def cluster(summarize_file, group_columns):
     plt.style.use('seaborn-v0_8-whitegrid')
     fig = plt.figure(figsize=heatmap_size)
     gs = fig.add_gridspec(2 + len(group_columns), 3, 
-                          width_ratios=[1, 10, 1.5], 
-                          height_ratios=[1] + [0.1] * len(group_columns) + [10],
-                          left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
-    
-    # Gene dendrogram
-    ax_gene_dendrogram = fig.add_subplot(gs[1+len(group_columns), 0])
-    hierarchy.dendrogram(gene_linkage, orientation='left', ax=ax_gene_dendrogram, link_color_func=lambda k: 'black')
-    ax_gene_dendrogram.axis('off')
-    
-    # Case dendrogram
-    ax_case_dendrogram = fig.add_subplot(gs[0, 1])
-    hierarchy.dendrogram(case_linkage, ax=ax_case_dendrogram, link_color_func=lambda k: 'black')
-    ax_case_dendrogram.axis('off')
+                        width_ratios=[1, 10, 1.5], 
+                        height_ratios=[1] + [0.1] * len(group_columns) + [10],
+                        left=0.05, right=0.95, bottom=0.05, top=0.95, wspace=0.02, hspace=0.02)
     
     # Heatmap
     ax_heatmap = fig.add_subplot(gs[1+len(group_columns), 1])
     vmin = np.percentile(z_scores.values, 1)
     vmax = np.percentile(z_scores.values, 99)
     sns.heatmap(z_scores.T, cmap=heatmap_color, center=0, vmin=vmin, vmax=vmax,
-                xticklabels=False, yticklabels=False, cbar=False, ax=ax_heatmap)
-    
+                xticklabels=False, yticklabels=heatmap_gene_name, cbar=False, ax=ax_heatmap)
+
+    # Gene dendrogram
+    if heatmap_gene_name == True:
+        ax_heatmap.set_yticklabels(data_ordered.columns, fontsize=heatmap_font_size, rotation=0)
+    else:
+        ax_gene_dendrogram = fig.add_subplot(gs[1+len(group_columns), 0])
+        hierarchy.dendrogram(gene_linkage, orientation='left', ax=ax_gene_dendrogram, link_color_func=lambda k: 'black')
+        ax_gene_dendrogram.axis('off')
+
+    # Case dendrogram
+    ax_case_dendrogram = fig.add_subplot(gs[0, 1])
+    hierarchy.dendrogram(case_linkage, ax=ax_case_dendrogram, link_color_func=lambda k: 'black')
+    ax_case_dendrogram.axis('off')
+
     # Group indicators
     color_preset = heatmap_group_preset
     n_preset = len(color_preset)

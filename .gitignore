@@ -44,6 +44,7 @@
 *.fastq
 *.fna
 *.fq
+*.gct
 *.gmt
 *.gtf
 *.keg
