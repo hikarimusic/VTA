@@ -42,10 +42,11 @@ import seaborn as sns
 
 def generate_pca_plot(metadata, gene_data, group_columns, output_dir):
     print("[PCA] ...    ", end='\r')
+    
     # Normalize
     valid_samples = ~metadata[group_columns].isna().any(axis=1)
-    gene_data = gene_data[valid_samples]
-    metadata = metadata[valid_samples]
+    gene_data = gene_data[valid_samples].reset_index(drop=True)
+    metadata = metadata[valid_samples].reset_index(drop=True)
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(gene_data)
 
