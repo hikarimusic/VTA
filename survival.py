@@ -169,9 +169,9 @@ def survival(summarize_file, time_column, event_column, group_columns):
         durations = pd.to_numeric(df[time_column], errors='coerce')
         events = pd.to_numeric(df[event_column], errors='coerce')
         mask = ~(durations.isna() | events.isna() | values.isna())
-        durations = durations[mask].values
-        events = events[mask].values
-        values = values[mask]
+        durations = durations[mask].reset_index(drop=True).values
+        events = events[mask].reset_index(drop=True).values
+        values = values[mask].reset_index(drop=True)
         
         # Numerical column
         if pd.api.types.is_numeric_dtype(values):
@@ -245,9 +245,9 @@ def survival(summarize_file, time_column, event_column, group_columns):
         durations = pd.to_numeric(df[time_column], errors='coerce')
         events = pd.to_numeric(df[event_column], errors='coerce')
         mask = ~(durations.isna() | events.isna() | values.isna())
-        durations = durations[mask].values
-        events = events[mask].values
-        values = values[mask].astype(float)
+        durations = durations[mask].reset_index(drop=True).values
+        events = events[mask].reset_index(drop=True).values
+        values = values[mask].reset_index(drop=True).astype(float)
         threshold = np.percentile(values, 50)
         groups = (values > threshold).astype(int)
         if len(np.unique(groups)) < 2:
