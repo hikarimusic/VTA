@@ -10,7 +10,7 @@ pca_plot_labels = False
 pca_plot_group_order = {} # Example: {"Gender": ['female', 'male']}
 
 gene_threshold = 1
-gene_normalize = True
+gene_normalize = 'median' # 'median', 'mean', none
 
 cluster_gene_metric = 'correlation'
 cluster_case_metric = 'seuclidean'
@@ -111,9 +111,13 @@ def cluster(summarize_file, group_columns):
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]
-    target_median = selected_gene_data.median(axis=1).median(axis=0)
-    scale_factors = target_median / selected_gene_data.median(axis=1)
-    if gene_normalize == False:
+    if gene_normalize == 'median':
+        target_median = selected_gene_data.median(axis=1).median(axis=0)
+        scale_factors = target_median / selected_gene_data.median(axis=1)
+    elif gene_normalize == 'mean':
+        target_median = selected_gene_data.mean(axis=1).mean(axis=0)
+        scale_factors = target_median / selected_gene_data.mean(axis=1)
+    else:
         scale_factors = 1
     expression_data = selected_gene_data.multiply(scale_factors, axis=0)
     print(f"[Filter Genes] {expression_data.shape[1]}                 ")
@@ -133,17 +137,17 @@ def cluster(summarize_file, group_columns):
     if n_clusters is not None:
         cluster_labels = hierarchy.fcluster(case_linkage, t=n_clusters, criterion='maxclust')
         output_dir = os.path.dirname(summarize_file)
-        cohort_file = os.path.join(output_dir, 'cohort.csv')
-        cohort_df = pd.read_csv(cohort_file)
-        cohort_df[cluster_column_name] = [f"Cluster{label}" for label in cluster_labels]
-        clustered_cohort_output = os.path.join(output_dir, 'cohort_cluster.csv')
-        cohort_df.to_csv(clustered_cohort_output, index=False)
         
         summary_with_clusters = df.copy()
         start_gene_idx = summary_with_clusters.columns.get_loc('START_GENE')
         summary_with_clusters.insert(start_gene_idx, cluster_column_name, [f"Cluster{label}" for label in cluster_labels])
         clustered_summary_output = os.path.join(output_dir, 'summary_cluster.csv')
         summary_with_clusters.to_csv(clustered_summary_output, index=False)
+
+        start_gene_idx = summary_with_clusters.columns.get_loc('START_GENE')
+        cohort_with_clusters = summary_with_clusters.iloc[:, :start_gene_idx]
+        clustered_cohort_output = os.path.join(output_dir, 'cohort_cluster.csv')
+        cohort_with_clusters.to_csv(clustered_cohort_output, index=False)
 
     print("[Hierarchy Cluster] Complete                 ")
     
@@ -218,7 +222,7 @@ def cluster(summarize_file, group_columns):
         color_map = dict(zip(unique_groups, color_palette))
         legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label=group_column)])
         legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor=color_map[group], label=group) for group in unique_groups])
-        legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(4)])
+        legend_elements.extend([Rectangle((0, 0), 0.5, 0.5, facecolor="white", label="") for _ in range(2)])
 
     cmap = plt.get_cmap(heatmap_color)
     z_min = round(np.floor(vmin / 0.2))

@@ -77,3 +77,59 @@ ALLMARK.gmt
 [Analyze Variables] PCLAF: 8.818e-06
 [Analyze Genes] Significant genes: 172
 ``` 
+
+
+
+
+
+
+```sh
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 DEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster2 Cluster3 -- Cluster1
+[Read Data] Complete
+[Filter Genes] 15896
+[Find DEG] Up: 448 / Down: 566
+[Save Genes] Complete
+[Volcano Plot] Complete
+[Strip Plot] Complete
+[Heatmap] Complete
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 DEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster1 Cluster3 -- Cluster2
+[Read Data] Complete
+[Filter Genes] 15896
+[Find DEG] Up: 334 / Down: 220
+[Save Genes] Complete
+[Volcano Plot] Complete
+[Strip Plot] Complete
+[Heatmap] Complete
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 DEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster1 Cluster2 -- Cluster3
+[Read Data] Complete
+[Filter Genes] 15896
+[Find DEG] Up: 507 / Down: 469
+[Save Genes] Complete
+[Volcano Plot] Complete
+[Strip Plot] Complete
+[Heatmap] Complete
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 GSEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster2 Cluster3 -- Cluster1 HALLMARK.gmt
+[Read Data] Complete
+[Filter Genes] 15896
+[Load GeneSets] 50
+[KS Test] Up: 6 / Down: 10
+[Save GeneSets] Complete
+[GSEA Plots] Complete
+[Bar Plots] Complete
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 GSEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster1 Cluster3 -- Cluster2 HALLMARK.gmt
+[Read Data] Complete
+[Filter Genes] 15896
+[Load GeneSets] 50
+[KS Test] Up: 5 / Down: 10
+[Save GeneSets] Complete
+[GSEA Plots] Complete
+[Bar Plots] Complete
+(.amaterasu) hikari@hikari:~/AMATERASU$ python3 GSEA.py LIHC_ssgsea2/summary.csv 3Clusters Cluster1 Cluster2 -- Cluster3 HALLMARK.gmt
+[Read Data] Complete
+[Filter Genes] 15896
+[Load GeneSets] 50
+[KS Test] Up: 13 / Down: 4
+[Save GeneSets] Complete
+[GSEA Plots] Complete
+[Bar Plots] Complete
+```

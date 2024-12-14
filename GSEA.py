@@ -1,7 +1,7 @@
 # -------------------------
 
 gene_threshold = 1
-gene_normalize = True
+gene_normalize = 'median' # 'median', 'mean', none
 
 ks_multiple_test_correction = 'fdr_bh'
 ks_position_threshold = (0.40, 0.60)
@@ -202,9 +202,13 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]
-    target_median = selected_gene_data.median(axis=1).median(axis=0)
-    scale_factors = target_median / selected_gene_data.median(axis=1)
-    if gene_normalize == False:
+    if gene_normalize == 'median':
+        target_median = selected_gene_data.median(axis=1).median(axis=0)
+        scale_factors = target_median / selected_gene_data.median(axis=1)
+    elif gene_normalize == 'mean':
+        target_median = selected_gene_data.mean(axis=1).mean(axis=0)
+        scale_factors = target_median / selected_gene_data.mean(axis=1)
+    else:
         scale_factors = 1
     expression_data = selected_gene_data.multiply(scale_factors, axis=0)
     print(f"[Filter Genes] {expression_data.shape[1]}                 ")
@@ -257,6 +261,18 @@ def GSEA(summarize_file, group_column, group1, group2, gmt_file):
     results_df = results_df.sort_values('p_value')
     results_file = os.path.join(output_dir, f'GSEA_genesets_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}.csv')
     results_df.to_csv(results_file, index=False)
+
+    up_genesets = results_df[(results_df['enrichment_score'] > 0) & 
+                            (results_df['position'] < ks_position_threshold[0]) & 
+                            (results_df['adjusted_pvalue'] < ks_p_value_threshold)].copy()
+    up_file = os.path.join(output_dir, f'GSEA_genesets_up_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}.csv')
+    up_genesets.to_csv(up_file, index=False)
+
+    down_genesets = results_df[(results_df['enrichment_score'] < 0) & 
+                            (results_df['position'] > ks_position_threshold[1]) & 
+                            (results_df['adjusted_pvalue'] < ks_p_value_threshold)].copy()
+    down_file = os.path.join(output_dir, f'GSEA_genesets_down_{"+".join(group1)}_vs_{"+".join(group2)}_{geneset_name}.csv')
+    down_genesets.to_csv(down_file, index=False)
     print("[Save GeneSets] Complete                 ")
 
     # GSEA plots

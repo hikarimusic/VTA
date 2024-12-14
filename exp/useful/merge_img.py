@@ -86,9 +86,9 @@ def merge_images_grid(image_grid: List[List[str]], output_path: str, font_size: 
 
 # Usage
 image_grid = [
-    ['survival_KM_Cluster.png', 'survival_KM_PCLAF.png'],
-    ['survival_KM_Tumor.png', 'survival_KM_Stage.png'],
-    ['survival_KM_Race.png', 'survival_KM_Gender.png']
+    ['cluster_heatmap_median_RNAseq.png', 'cluster_heatmap_median_ssGSEA.png'],
+    ['cluster_heatmap_mean_RNAseq.png', 'cluster_heatmap_mean_ssGSEA.png'],
+    ['cluster_heatmap_none_RNAseq.png', 'cluster_heatmap_none_ssGSEA.png']
 ]
-merged = merge_images_grid(image_grid, 'survival_KM.png')
+merged = merge_images_grid(image_grid, 'compare_normalization.png')
 

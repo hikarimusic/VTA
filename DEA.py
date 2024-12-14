@@ -1,7 +1,7 @@
 # -------------------------
 
 gene_threshold = 1
-gene_normalize = True
+gene_normalize = 'median' # 'median', 'mean', none
 
 deg_multiple_test_correction = 'fdr_bh'
 deg_log2_fc_threshold = 1
@@ -293,7 +293,7 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
 
     print("[Heatmap] Complete                 ")
 
-def DEG(summarize_file, group_column, group1, group2):
+def DEA(summarize_file, group_column, group1, group2):
     # Read data
     print(f"[Read Data] ...", end='\r')
     df = pd.read_csv(summarize_file, low_memory=False)
@@ -308,9 +308,13 @@ def DEG(summarize_file, group_column, group1, group2):
     gene_data = gene_data[expressed_genes]
     high_var_genes = gene_data.columns[gene_data.var() > 0]
     selected_gene_data = gene_data[high_var_genes]
-    target_median = selected_gene_data.median(axis=1).median(axis=0)
-    scale_factors = target_median / selected_gene_data.median(axis=1)
-    if gene_normalize == False:
+    if gene_normalize == 'median':
+        target_median = selected_gene_data.median(axis=1).median(axis=0)
+        scale_factors = target_median / selected_gene_data.median(axis=1)
+    elif gene_normalize == 'mean':
+        target_median = selected_gene_data.mean(axis=1).mean(axis=0)
+        scale_factors = target_median / selected_gene_data.mean(axis=1)
+    else:
         scale_factors = 1
     expression_data = selected_gene_data.multiply(scale_factors, axis=0)
     print(f"[Filter Genes] {expression_data.shape[1]}                 ")
@@ -357,6 +361,14 @@ def DEG(summarize_file, group_column, group1, group2):
     output_dir = os.path.dirname(summarize_file)
     results_file = os.path.join(output_dir, f'DEA_genes_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
     results_df.to_csv(results_file, index=False)
+
+    up_genes = results_df[(results_df['log2_fold_change'] > log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold)].copy()
+    up_file = os.path.join(output_dir, f'DEA_genes_up_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
+    up_genes.to_csv(up_file, index=False)
+
+    down_genes = results_df[(results_df['log2_fold_change'] < -log2_fc_threshold) & (results_df['adjusted_pvalue'] < p_value_threshold)].copy()
+    down_file = os.path.join(output_dir, f'DEA_genes_down_{"+".join(group1)}_vs_{"+".join(group2)}.csv')
+    down_genes.to_csv(down_file, index=False)
     print(f"[Save Genes] Complete                 ")
 
     print("[Create Plots] ...", end='\r')
@@ -383,4 +395,4 @@ if __name__ == "__main__":
     group1 = sys.argv[3:separator_index]
     group2 = sys.argv[separator_index+1:]
     
-    DEG(summarize_file, group_column, group1, group2)
+    DEA(summarize_file, group_column, group1, group2)

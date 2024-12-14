@@ -10,7 +10,6 @@ survival_plot_linewidth = 1
 survival_plot_censorheight = 5
 survival_plot_color = 'tab10'
 
-
 # -------------------------
 
 import sys

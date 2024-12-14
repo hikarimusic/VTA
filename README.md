@@ -191,7 +191,10 @@ Strip plots of the differential expression genes will be generated as `<cohort/D
 
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" height=600>
 
-The differential expression genes will be summarized as `cohort/DEA_genes_....csv`. Example:
+The differential expression genes will be summarized as `cohort/DEA_genes_....csv`. 
+The up-regulated genes of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/DEA_genes_up_....csv`. 
+The down-regulated genes of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/DEA_genes_down_....csv`. 
+Example:
 
 | gene | log2_fold_change | p_value | adjusted_pvalue |
 | :- | :- | :- | :- |
@@ -232,7 +235,10 @@ Bar plots showing leading genes of significant gene sets will be generated in `<
 
 <img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_up.png" height=600><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_down.png" height=600>
 
-The gene sets will be summarized as `cohort/GSEA_genesets_....csv`. Example:
+The gene sets will be summarized as `cohort/GSEA_genesets_....csv`. 
+The up-regulated gene sets of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/GSEA_genesets_up_....csv`. 
+The down-regulated gene sets of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/GSEA_genesets_down_....csv`. 
+Example:
 
 | gene_set | enrichment_score | position | p_value | adjusted_pvalue |
 | :- | :- | :- | :- | :- |

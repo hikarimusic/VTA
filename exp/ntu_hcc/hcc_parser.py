@@ -14,7 +14,7 @@ def parse_sra_data(filename):
                 key, value = line.split(':', 1)
                 key = key.split('=')[1].strip()
                 value = value.strip()
-                if key in ['etiology', 'ctnnb1 status', 'efs days', 'os days']:
+                if key in ['etiology', 'ctnnb1 status', 'efs days', 'efs event', 'os days', 'os event']:
                     current_sample[key] = value
     
     if current_sample:
@@ -23,7 +23,7 @@ def parse_sra_data(filename):
     return samples
 
 def write_csv(samples, output_file):
-    fieldnames = ['sample_id', 'etiology', 'ctnnb1 status', 'efs days', 'os days']
+    fieldnames = ['sample_id', 'etiology', 'ctnnb1 status', 'efs days', 'efs event', 'os days', 'os event']
     
     with open(output_file, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
