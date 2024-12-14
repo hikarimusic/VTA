@@ -84,11 +84,24 @@ def merge_images_grid(image_grid: List[List[str]], output_path: str, font_size: 
     cv2.imwrite(output_path, merged_image)
     return merged_image
 
-# Usage
 image_grid = [
-    ['survival_KM_Cluster.png', 'survival_KM_PCLAF.png'],
-    ['survival_KM_Tumor.png', 'survival_KM_Stage.png'],
-    ['survival_KM_Race.png', 'survival_KM_Gender.png']
+    ['up_HALLMARK_MITOTIC_SPINDLE.png', 'up_HALLMARK_UV_RESPONSE_DN.png', 'up_HALLMARK_PROTEIN_SECRETION.png', 'up_HALLMARK_TGF_BETA_SIGNALING.png'],
+    ['down_HALLMARK_OXIDATIVE_PHOSPHORYLATION.png', 'down_HALLMARK_DNA_REPAIR.png', 'down_HALLMARK_REACTIVE_OXYGEN_SPECIES_PATHWAY.png', None]
 ]
-merged = merge_images_grid(image_grid, 'survival_KM.png')
+merged = merge_images_grid(image_grid, 'GSEA_cluster1.png')
+
+image_grid = [
+    ['up_HALLMARK_MYC_TARGETS_V1.png', 'up_HALLMARK_E2F_TARGETS.png', 'up_HALLMARK_G2M_CHECKPOINT.png', None],
+    ['down_HALLMARK_XENOBIOTIC_METABOLISM.png', 'down_HALLMARK_BILE_ACID_METABOLISM.png', 'down_HALLMARK_FATTY_ACID_METABOLISM.png', 'down_HALLMARK_PEROXISOME.png'],
+    ['down_HALLMARK_HEME_METABOLISM.png', 'down_HALLMARK_ANDROGEN_RESPONSE.png', 'down_HALLMARK_UV_RESPONSE_DN.png', None]
+]
+merged = merge_images_grid(image_grid, 'GSEA_cluster2.png')
+
+image_grid = [
+    ['up_HALLMARK_XENOBIOTIC_METABOLISM.png', 'up_HALLMARK_BILE_ACID_METABOLISM.png', 'up_HALLMARK_OXIDATIVE_PHOSPHORYLATION.png', 'up_HALLMARK_FATTY_ACID_METABOLISM.png'],
+    ['up_HALLMARK_ADIPOGENESIS.png', 'up_HALLMARK_PEROXISOME.png', 'up_HALLMARK_COAGULATION.png', 'up_HALLMARK_CHOLESTEROL_HOMEOSTASIS.png'],
+    ['down_HALLMARK_G2M_CHECKPOINT.png', 'down_HALLMARK_MITOTIC_SPINDLE.png', 'down_HALLMARK_INFLAMMATORY_RESPONSE.png', 'down_HALLMARK_APICAL_JUNCTION.png'],
+    ['down_HALLMARK_KRAS_SIGNALING_UP.png', None, None, None]
+]
+merged = merge_images_grid(image_grid, 'GSEA_cluster3.png')
 

@@ -16,6 +16,7 @@ cluster_gene_metric = 'correlation'
 cluster_case_metric = 'seuclidean'
 cluster_gene_method = 'ward'
 cluster_case_method = 'ward'
+cluster_column_name = 'nClusters'
 
 heatmap_format = 'png'
 heatmap_size = (7.0, 7.0)
@@ -134,13 +135,13 @@ def cluster(summarize_file, group_columns):
         output_dir = os.path.dirname(summarize_file)
         cohort_file = os.path.join(output_dir, 'cohort.csv')
         cohort_df = pd.read_csv(cohort_file)
-        cohort_df['Cluster'] = [f"Cluster{label}" for label in cluster_labels]
+        cohort_df[cluster_column_name] = [f"Cluster{label}" for label in cluster_labels]
         clustered_cohort_output = os.path.join(output_dir, 'cohort_cluster.csv')
         cohort_df.to_csv(clustered_cohort_output, index=False)
         
         summary_with_clusters = df.copy()
         start_gene_idx = summary_with_clusters.columns.get_loc('START_GENE')
-        summary_with_clusters.insert(start_gene_idx, 'Cluster', [f"Cluster{label}" for label in cluster_labels])
+        summary_with_clusters.insert(start_gene_idx, cluster_column_name, [f"Cluster{label}" for label in cluster_labels])
         clustered_summary_output = os.path.join(output_dir, 'summary_cluster.csv')
         summary_with_clusters.to_csv(clustered_summary_output, index=False)
 
