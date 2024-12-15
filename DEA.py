@@ -7,12 +7,6 @@ deg_multiple_test_correction = 'fdr_bh'
 deg_log2_fc_threshold = 1
 deg_p_value_threshold = 0.001
 
-count_plot_generate = False
-count_plot_format = 'png'
-count_plot_size = (3.5, 3.5)
-count_plot_dpi = 600
-count_plot_fontsize = 6
-
 volcano_plot_format = 'png'
 volcano_plot_size = (3.5, 3.5)
 volcano_plot_dpi = 600
@@ -39,7 +33,9 @@ heatmap_dpi = 600
 heatmap_color = 'seismic'
 heatmap_fontsize = 6
 heatmap_gene_metric = 'correlation'
+heatmap_case_metric = 'seuclidean'
 heatmap_gene_method = 'ward'
+heatmap_case_method = 'ward'
 
 # -------------------------
 
@@ -56,49 +52,6 @@ from scipy.spatial.distance import pdist
 from sklearn.preprocessing import StandardScaler
 from matplotlib.patches import Rectangle
 
-def generate_count_plot(metadata, group_column, group1, group2, output_dir):
-    print("[Count Plot] ...                 ", end='\r')
-
-    # Combined group
-    filtered_metadata = metadata[metadata[group_column].isin(group1 + group2)].copy()
-    filtered_metadata['Group'] = filtered_metadata[group_column].apply(
-        lambda x: '+'.join(group1) if x in group1 else '+'.join(group2)
-    )
-    
-    # Iterate group columns
-    for col in metadata.columns:
-        if col != group_column and col != 'Group':
-            unique_values = filtered_metadata[col].nunique()
-            if unique_values >=2 and unique_values <= 10:
-                # Chi-square test
-                contingency_table = pd.crosstab(filtered_metadata['Group'], filtered_metadata[col])
-                p_value = "None"
-                if (contingency_table > 0).all().all():
-                    chi2, p_value = stats.chi2_contingency(contingency_table)[:2]
-                    if p_value < 0.001:
-                        p_value = f'{p_value:.2e}'
-                    else:
-                        p_value = f'{p_value:.3f}'
-
-                # Count plot
-                plt.style.use('ggplot')
-                plt.figure(figsize=count_plot_size)
-                sns.countplot(data=filtered_metadata, x='Group', hue=col)
-
-                plt.xticks(fontsize=count_plot_fontsize)
-                plt.yticks(fontsize=count_plot_fontsize)
-                plt.xlabel('Group', fontsize=count_plot_fontsize)
-                plt.ylabel('Count', fontsize=count_plot_fontsize)
-                plt.legend(fontsize=count_plot_fontsize)
-
-                count_plot_file = os.path.join(output_dir, f'DEA_count_{"+".join(group1)}_vs_{"+".join(group2)}_{col}.' + count_plot_format)
-                plt.savefig(count_plot_file, format=count_plot_format, dpi=count_plot_dpi, bbox_inches='tight')
-                plt.close()
-
-                print(f"[Chi-Square] Group / {col}: {p_value}                 ")
-    
-    print("[Count Plot] Complete                 ")
-
 def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_threshold, p_value_threshold):
     print("[Volcano Plot] ...                 ", end='\r')
 
@@ -110,7 +63,31 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     # Volcano plot
     plt.style.use('ggplot')
     plt.figure(figsize=volcano_plot_size)
-    plt.scatter(results_df['log2_fold_change'], -np.log10(results_df['adjusted_pvalue']), c=results_df['color'], alpha=volcano_plot_dotalpha, s=volcano_plot_dotsize)
+    
+    # Non-significant points
+    mask = results_df['color'] == volcano_plot_other_color
+    plt.scatter(
+        results_df.loc[mask, 'log2_fold_change'],
+        -np.log10(results_df.loc[mask, 'adjusted_pvalue']),
+        c=volcano_plot_other_color,
+        alpha=volcano_plot_dotalpha,
+        s=volcano_plot_dotsize
+    )
+    
+    # Significant points
+    for color, label in [
+        (volcano_plot_up_color, "+".join(group2)),
+        (volcano_plot_down_color, "+".join(group1))
+    ]:
+        mask = results_df['color'] == color
+        plt.scatter(
+            results_df.loc[mask, 'log2_fold_change'],
+            -np.log10(results_df.loc[mask, 'adjusted_pvalue']),
+            c=color,
+            alpha=volcano_plot_dotalpha,
+            s=volcano_plot_dotsize,
+            label=label
+        )
     
     if volcano_plot_line == True:
         plt.axvline(x=log2_fc_threshold, color=volcano_plot_other_color, linestyle='--')
@@ -121,6 +98,7 @@ def generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_thresh
     plt.yticks(fontsize=volcano_plot_fontsize)
     plt.xlabel('Log2 Fold Change', fontsize=volcano_plot_fontsize)
     plt.ylabel('-Log10 Adjusted P-value', fontsize=volcano_plot_fontsize)
+    plt.legend(fontsize=volcano_plot_fontsize, loc='best')
     
     volcano_file = os.path.join(output_dir, f'DEA_volcano_{"+".join(group1)}_vs_{"+".join(group2)}.' + volcano_plot_format)
     plt.savefig(volcano_file, format=volcano_plot_format, dpi=volcano_plot_dpi, bbox_inches='tight')
@@ -209,8 +187,8 @@ def generate_heatmap(results_df, expression_data, metadata, group_column, group1
     for group in [group1, group2]:
         group_data = selected_gene_data[filtered_metadata[group_column].isin(group)]
         if len(group_data) > 1:
-            group_dist = pdist(group_data, metric='correlation')
-            group_linkage = hierarchy.linkage(group_dist, method='ward')
+            group_dist = pdist(group_data, metric=heatmap_case_metric)
+            group_linkage = hierarchy.linkage(group_dist, method=heatmap_case_method)
             group_order.extend(group_data.index[hierarchy.leaves_list(group_linkage)])
         else:
             group_order.extend(group_data.index)
@@ -372,10 +350,6 @@ def DEA(summarize_file, group_column, group1, group2):
     print(f"[Save Genes] Complete                 ")
 
     print("[Create Plots] ...", end='\r')
-
-    # Count plot
-    if count_plot_generate == True:
-        generate_count_plot(metadata, group_column, group1, group2, output_dir)
     
     # Volcano plot
     generate_volcano_plot(results_df, group1, group2, output_dir, log2_fc_threshold, p_value_threshold)

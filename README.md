@@ -248,6 +248,30 @@ Example:
 
 All the configuration such as figure size and format can be set in the head of `GSEA.py`.
 
+## Single Sample Gene Set Enrichment Analysis
+
+Start AMATERASU:
+
+```sh
+source .amaterasu/bin/activate
+cd AMATERASU/
+```
+
+Perform single sample gene set enrichment analysis on all samples based on the predefined gene set:
+```sh
+python3 ssGSEA.py <cohort/summary.csv> <geneset.gmt>
+```
+
+Enrichment scores between each pair of sample and gene set will be calculated and summarized as `cohort/summary_ssGSEA.csv`, which can be used in other analysis. Example of `cohort/summary_ssGSEA.csv`:
+
+| sample_id | ... | ADIPOGENESIS | ALLOGRAFT_REJECTION | ... |
+| :- | :- | :- | :- | :- |
+| TCGA_DD_AAVP | ... | 28463.1 | 24099.9 | ... |
+| TCGA_DD_A4NP | ... | 28476.4 | 22982.5 | ... |
+| TCGA_BC_4073 | ... | 28279.4 | 27140.9 | ... |
+
+All the configuration such as removing prefix and combine mode can be set in the head of `ssGSEA.py`.
+
 ## Survival Analysis
 
 Start AMATERASU:
@@ -284,6 +308,8 @@ If `[-all]` is specified, all genes will be analyzed and summarized as `<cohort/
 | YBX1 | 184.2 | 1 | 1.14e-05 | 0.00378 |
 
 All the configuration such as figure size and format can be set in the head of `survival.py`.
+
+
 
 ## Others
 
