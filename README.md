@@ -150,11 +150,11 @@ Each of the `<group_column?>` will be labeled in the clustering results.
 
 PCA plots corresponding to each column will be generated as `<cohort/cluster_PCA_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_PCA.png" height=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_PCA.png" width=300>
 
 Heatmaps with hierarchy clustering will be generated as `<cohort/cluster_heatmap_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_heatmap.png" height=600>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/cluster_heatmap.png" width=600>
 
 If `[-n]` is specified in the command, samples will be labeled into n clusters and `cohort/summary_cluster.csv` will be generated. You can use it instead of `cohort/summary.csv` in the following analysis to access the `Cluster` column. Example of `cohort/summary_cluster.csv`:
 
@@ -185,11 +185,11 @@ The first group will contain samples with `<group_column>` equal to `<group_a?>`
 
 Volcano plots and heatmaps comparing the two groups will be generated as `<cohort/DEA_volcano_....png>` and `<cohort/DEA_heatmap_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" height=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" height=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_volcano.png" width=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_heatmap.png" width=300>
 
 Strip plots of the differential expression genes will be generated as `<cohort/DEA_strip_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" height=600>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/DEA_strip.png" width=300>
 
 The differential expression genes will be summarized as `cohort/DEA_genes_....csv`. 
 The up-regulated genes of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/DEA_genes_up_....csv`. 
@@ -229,11 +229,11 @@ HALLMARK_ANDROGEN_RESPONSE    <url>    ABCC4    ABHD2    ACSL3    ...
 
 GSEA plots of significant gene sets will be generated in `<cohort/GSEA_gsea_.../>` as `<up_....png>` or `<down_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_up.png" height=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_down.png" height=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_up.png" width=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_gsea_down.png" width=300>
 
 Bar plots showing leading genes of significant gene sets will be generated in `<cohort/GSEA_bar_.../>` as `<up_....png>` or `<down_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_up.png" height=600><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_down.png" height=600>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_up.png" width=300><img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/GSEA_bar_down.png" width=300>
 
 The gene sets will be summarized as `cohort/GSEA_genesets_....csv`. 
 The up-regulated gene sets of `<group_b?>` compared to `<group_a?>` will be summarized as `cohort/GSEA_genesets_up_....csv`. 
@@ -290,7 +290,7 @@ python3 survival.py <cohort/summary.csv> <time> <event> <group_column1> <group_c
 
 Kaplan–Meier plots corresponding to each column will be generated as `<cohort/survival_KM_....png>`. Example:
 
-<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/survival_KM.png" height=300>
+<img src="https://github.com/hikarimusic/AMATERASU/raw/main/assets/survival_KM.png" width=300>
 
 The survival differences will be summarized as `<cohort/survival_variables.csv>`. Example:
 
